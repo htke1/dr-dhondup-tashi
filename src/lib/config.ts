@@ -91,7 +91,7 @@ export const APP_CONFIG = {
     feeDisplay: "₹500",
     name: "Family Head & Father Health Initiative",
     rationale:
-      "Dr. Dhondup Tashi's clinical observation across 21+ years: Fathers and family heads frequently delay medical attention until illnesses reach late stages. We offer this 50% clinical subsidy to encourage early diagnosis and timely care.",
+      "Dr. Dhondup Tashi's clinical observation through years of practice: Fathers and family heads frequently delay medical attention until illnesses reach late stages. We offer this 50% clinical subsidy to encourage early diagnosis and timely care.",
   },
 
   /** Daily appointment slots (times in HH:mm, 24-hour, Asia/Kolkata) */

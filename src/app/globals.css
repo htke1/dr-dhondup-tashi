@@ -602,3 +602,105 @@ p {
     margin: 0 auto;
   }
 }
+
+/* =========================================================
+   ABOUT SECTION RESPONSIVE STYLES
+   ========================================================= */
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr;
+  gap: 3.5rem;
+  align-items: start;
+}
+
+.about-photo-wrapper {
+  position: relative;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  aspect-ratio: 4/5;
+  box-shadow: 0 24px 48px -12px rgba(123, 45, 62, 0.22), 0 0 0 1px var(--color-border-soft);
+  background: var(--color-cream-soft);
+  max-width: 440px;
+  margin-inline: auto;
+}
+
+.about-mobile-header {
+  display: none;
+}
+
+.about-desktop-header {
+  display: block;
+}
+
+.about-badges-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.about-credentials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border-soft);
+}
+
+@media (max-width: 900px) {
+  .about-grid {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+  }
+
+  .about-mobile-header {
+    display: block;
+    text-align: center;
+    margin-bottom: 1.75rem;
+  }
+
+  .about-desktop-header {
+    display: none;
+  }
+
+  .about-photo-col {
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .about-photo-wrapper {
+    max-width: 280px;
+    aspect-ratio: 1/1;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 12px 28px -8px rgba(123, 45, 62, 0.18);
+  }
+
+  .about-badges-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.625rem;
+    margin-top: 1.25rem;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 900px) {
+  .about-badges-container {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .about-credentials-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.625rem;
+  }
+
+  .about-cta-btn {
+    width: 100% !important;
+    text-align: center;
+    justify-content: center;
+  }
+}
+

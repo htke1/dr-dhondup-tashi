@@ -880,7 +880,7 @@ function StepPatientDetails({
                   </span>
                 </label>
                 <p style={{ fontSize: "0.8125rem", color: "var(--color-charcoal-soft)", lineHeight: 1.5, margin: 0 }}>
-                  In Dr. Dhondup Tashi’s 21+ years of practice, fathers and family heads frequently delay medical attention until symptoms become severe. To encourage early evaluation, this consultation is subsidized by 50% (₹500 instead of ₹1,000).
+                  In Dr. Dhondup Tashi’s years of practice, fathers and family heads frequently delay medical attention until symptoms become severe. To encourage early evaluation, this consultation is subsidized by 50% (₹500 instead of ₹1,000).
                 </p>
               </div>
             </div>

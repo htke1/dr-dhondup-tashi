@@ -659,99 +659,111 @@ export function AboutSection() {
       id="about"
     >
       <div className="container">
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1.35fr",
-            gap: "4rem",
-            alignItems: "start",
-          }}
-        >
-          {/* Left: About picture */}
-          <div>
-            <div
-              style={{
-                position: "relative",
-                borderRadius: "var(--radius-xl)",
-                overflow: "hidden",
-                aspectRatio: "4/5",
-                boxShadow: "0 24px 48px -12px rgba(123, 45, 62, 0.22), 0 0 0 1px var(--color-border-soft)",
-                background: "var(--color-cream-soft)",
-              }}
-            >
+        {/* Mobile-Only Header: Displays cleanly before the photo on compact screens */}
+        <div className="about-mobile-header">
+          <span className="section-eyebrow">Biography &amp; Qualifications</span>
+          <h2 style={{ marginBottom: "0.35rem", fontSize: "clamp(1.75rem, 5vw, 2.2rem)" }}>
+            {APP_CONFIG.doctor.name}
+          </h2>
+          <p
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: "1rem",
+              color: "var(--color-maroon)",
+              fontStyle: "italic",
+              lineHeight: 1.45,
+              margin: 0,
+            }}
+          >
+            General Physician &middot; Clinical Sonologist &middot; Chief Medical Officer &middot; Community Health Advocate
+          </p>
+          <div className="divider-ornament" aria-hidden="true" style={{ marginBlock: "1.25rem", justifyContent: "center" }}>
+            <div className="divider-ornament-inner" />
+          </div>
+        </div>
+
+        <div className="about-grid">
+          {/* Left Column: Photo & Accolade Badges */}
+          <div className="about-photo-col">
+            <div className="about-photo-wrapper">
               <Image
                 src="/images/AboutPicture.jpeg"
                 alt="Dr. Dhondup Tashi during clinical patient care"
                 fill
-                sizes="(max-width: 768px) 100vw, 450px"
+                sizes="(max-width: 768px) 280px, 450px"
                 style={{ objectFit: "cover", objectPosition: "center top" }}
+                priority={false}
               />
             </div>
 
-            {/* Award & Honor Badge */}
-            <div
-              style={{
-                marginTop: "1.5rem",
-                background: "var(--color-saffron-pale)",
-                border: "1px solid rgba(196,127,58,0.25)",
-                borderRadius: "var(--radius-md)",
-                padding: "1rem 1.25rem",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.35rem" }}>
-                <span style={{ fontSize: "1.1rem" }}>🏅</span>
-                <strong style={{ fontSize: "0.875rem", color: "var(--color-charcoal)" }}>
-                  Dr. Chetan Bettagowda Medical Award
-                </strong>
+            {/* Badges Container */}
+            <div className="about-badges-container">
+              {/* Award Badge */}
+              <div
+                style={{
+                  background: "var(--color-saffron-pale)",
+                  border: "1px solid rgba(196,127,58,0.25)",
+                  borderRadius: "var(--radius-md)",
+                  padding: "0.875rem 1rem",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
+                  <span style={{ fontSize: "1.1rem" }}>🏅</span>
+                  <strong style={{ fontSize: "0.85rem", color: "var(--color-charcoal)" }}>
+                    Dr. Chetan Bettagowda Medical Award
+                  </strong>
+                </div>
+                <p style={{ fontSize: "0.8rem", color: "var(--color-charcoal-soft)", lineHeight: 1.45, margin: 0 }}>
+                  Conferred by the Machik organization (Washington D.C.) for pioneering contributions to rural healthcare and medical capacity building.
+                </p>
               </div>
-              <p style={{ fontSize: "0.8125rem", color: "var(--color-charcoal-soft)", lineHeight: 1.5, margin: 0 }}>
-                Conferred by the Washington-based Machik organization in recognition of Dr. Tashi&apos;s pioneering contributions to rural healthcare and medical capacity building.
-              </p>
-            </div>
 
-            {/* Goodwill Ambassador badge */}
-            <div
-              style={{
-                marginTop: "0.75rem",
-                background: "var(--color-maroon-muted)",
-                border: "1px solid rgba(123,45,62,0.15)",
-                borderRadius: "var(--radius-md)",
-                padding: "0.875rem 1.25rem",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
-                <span style={{ fontSize: "1rem" }}>🌐</span>
-                <strong style={{ fontSize: "0.875rem", color: "var(--color-maroon)" }}>
-                  International Goodwill Ambassador
-                </strong>
+              {/* Goodwill Ambassador badge */}
+              <div
+                style={{
+                  background: "var(--color-maroon-muted)",
+                  border: "1px solid rgba(123,45,62,0.15)",
+                  borderRadius: "var(--radius-md)",
+                  padding: "0.875rem 1rem",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
+                  <span style={{ fontSize: "1rem" }}>🌐</span>
+                  <strong style={{ fontSize: "0.85rem", color: "var(--color-maroon)" }}>
+                    International Goodwill Ambassador
+                  </strong>
+                </div>
+                <p style={{ fontSize: "0.8rem", color: "var(--color-charcoal-soft)", lineHeight: 1.45, margin: 0 }}>
+                  Taipei Veterans General Hospital (TVGH), Taiwan, following advanced fellowship training in clinical echocardiography.
+                </p>
               </div>
-              <p style={{ fontSize: "0.8125rem", color: "var(--color-charcoal-soft)", margin: 0 }}>
-                Taipei Veterans General Hospital (TVGH), Taiwan, following advanced training in clinical echocardiography.
-              </p>
             </div>
           </div>
 
-          {/* Right: Full Authentic Biography */}
+          {/* Right Column: Full Biography & Credentials */}
           <div>
-            <span className="section-eyebrow">Biography & Qualifications</span>
-            <h2 id="about-heading" style={{ marginBottom: "0.5rem" }}>
-              {APP_CONFIG.doctor.name}
-            </h2>
-            <p
-              style={{
-                fontFamily: "var(--font-serif)",
-                fontSize: "1.05rem",
-                color: "var(--color-maroon)",
-                marginBottom: "1.25rem",
-                fontStyle: "italic",
-                lineHeight: 1.4,
-              }}
-            >
-              General Physician &middot; Clinical Sonologist &middot; Chief Medical Officer &middot; Community Health Advocate
-            </p>
+            {/* Desktop-Only Header */}
+            <div className="about-desktop-header">
+              <span className="section-eyebrow">Biography &amp; Qualifications</span>
+              <h2 id="about-heading" style={{ marginBottom: "0.5rem" }}>
+                {APP_CONFIG.doctor.name}
+              </h2>
+              <p
+                style={{
+                  fontFamily: "var(--font-serif)",
+                  fontSize: "1.05rem",
+                  color: "var(--color-maroon)",
+                  marginBottom: "1.25rem",
+                  fontStyle: "italic",
+                  lineHeight: 1.4,
+                }}
+              >
+                General Physician &middot; Clinical Sonologist &middot; Chief Medical Officer &middot; Community Health Advocate
+              </p>
 
-            <div className="divider-ornament" aria-hidden="true">
-              <div className="divider-ornament-inner" />
+              <div className="divider-ornament" aria-hidden="true">
+                <div className="divider-ornament-inner" />
+              </div>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "1.125rem", fontSize: "0.95rem", lineHeight: 1.65, color: "var(--color-charcoal)" }}>
@@ -781,16 +793,7 @@ export function AboutSection() {
             </div>
 
             {/* Structured Credentials Grid */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                gap: "0.875rem",
-                marginTop: "2rem",
-                paddingTop: "1.5rem",
-                borderTop: "1px solid var(--color-border-soft)",
-              }}
-            >
+            <div className="about-credentials-grid">
               {[
                 "MBBS — IGMC Shimla",
                 "M.Med Family Medicine (Distinction, CMC Vellore)",
@@ -830,7 +833,7 @@ export function AboutSection() {
             </div>
 
             <div style={{ marginTop: "2rem" }}>
-              <Link href="/book" className="btn btn-primary btn-md">
+              <Link href="/book" className="btn btn-primary btn-md about-cta-btn">
                 Schedule a Consultation with Dr. Tashi
               </Link>
             </div>
@@ -999,7 +1002,7 @@ export function ConsultationInfoSection() {
           </div>
 
           <p style={{ fontSize: "0.9rem", color: "var(--color-charcoal-mid)", lineHeight: 1.6, margin: 0 }}>
-            In over 21 years of clinical practice, Dr. Dhondup Tashi has observed that fathers and family heads frequently prioritize their household responsibilities over their personal wellbeing, often delaying medical care until conditions become critical. To encourage proactive checkups, early screening, and timely intervention, a <strong>50% clinical subsidy (₹500 consultation fee)</strong> is available for all fathers and family heads.
+            In his years of clinical practice, Dr. Dhondup Tashi has observed that fathers and family heads frequently prioritize their household responsibilities over their personal wellbeing, often delaying medical care until conditions become critical. To encourage proactive checkups, early screening, and timely intervention, a <strong>50% clinical subsidy (₹500 consultation fee)</strong> is available for all fathers and family heads.
           </p>
 
           <div style={{ marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
