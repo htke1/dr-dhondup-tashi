@@ -10,17 +10,67 @@ export const APP_CONFIG = {
   doctor: {
     name: "Dr. Dhondup Tashi",
     shortName: "Dr. Dhondup Tashi",
-    title: "MBBS",
-    role: "Chief Medical Officer & Primary Care Physician",
-    hospital: "Gaden Jangtse Charitable Hospital, Mundgod, Karnataka",
-    /** Replace with actual path once photo is provided */
-    photoUrl: "/images/doctor-placeholder.jpg",
+    title: "MBBS, M.Med (Family Medicine)",
+    role: "General Physician | Clinical Sonologist | Chief Medical Officer | Community Health Advocate",
+    experience: "21+ Years Clinical Experience",
+    hospital: "Gaden Jangtse Hospital, Mundgod, Karnataka, India",
+    photoUrl: "/images/HomePagePicture.jpeg",
+    aboutPhotoUrl: "/images/AboutPicture.jpeg",
   },
+
+  /** Clinical consultation expertise */
+  consultationServices: [
+    {
+      title: "Full Body Check-ups & Preventive Healthcare",
+      description: "Comprehensive health evaluations, routine risk screening, and proactive wellness guidance.",
+      category: "Preventive Care",
+    },
+    {
+      title: "Liver Diseases & Disorders",
+      description: "Diagnosis and management of Fatty Liver, Chronic Hepatitis B, jaundice, and hepatic conditions.",
+      category: "Hepatology",
+    },
+    {
+      title: "Diabetes, Hypertension & Lifestyle Diseases",
+      description: "Individualized management plans for Type 2 Diabetes, blood pressure, cholesterol, and metabolic health.",
+      category: "Metabolic Health",
+    },
+    {
+      title: "Gastrointestinal & Digestive Problems",
+      description: "Clinical evaluation of acid reflux, IBS, stomach disorders, gastritis, and chronic indigestion.",
+      category: "Gastroenterology",
+    },
+    {
+      title: "Kidney Diseases & Kidney Stone Prevention",
+      description: "Renal health assessments, chronic kidney disease monitoring, and stone recurrence prevention.",
+      category: "Nephrology",
+    },
+    {
+      title: "Minor Surgical Conditions",
+      description: "Surgical second opinions, post-operative recovery, wound care advice, and minor surgical evaluations.",
+      category: "Minor Surgery",
+    },
+    {
+      title: "General Medical & Chronic Disease Management",
+      description: "Evidence-based clinical care for multi-system conditions, elderly care, and persistent symptoms.",
+      category: "Primary Care",
+    },
+    {
+      title: "Ultrasound (USG) Report Interpretation",
+      description: "Expert secondary analysis of abdominal, pelvic, and general sonography scans by a certified sonologist.",
+      category: "Sonology",
+    },
+    {
+      title: "Echocardiography (ECHO) Report Interpretation",
+      description: "Detailed clinical interpretation of cardiac ultrasound / echocardiogram reports and heart health context.",
+      category: "Echocardiography",
+    },
+  ],
 
   /** Application branding */
   site: {
-    name: "Dr. Dhondup Tashi | Online Consultations",
-    tagline: "Thoughtful medical care, wherever you are.",
+    name: "Dr. Dhondup Tashi | Online Medical Consultations",
+    tagline: "Thoughtful, evidence-based medical care — wherever you are.",
     url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   },
 

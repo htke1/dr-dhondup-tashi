@@ -54,18 +54,12 @@ export default function SiteFooter() {
             >
               {APP_CONFIG.doctor.name}
             </p>
-            <p style={{ fontSize: "0.875rem", lineHeight: 1.65, marginBottom: "1.25rem" }}>
-              Online medical consultations for patients wherever they are. 
-              Thoughtful care, accessible care.
+            <p style={{ fontSize: "0.875rem", lineHeight: 1.65, marginBottom: "0.75rem" }}>
+              Senior General Physician &amp; Clinical Sonologist with 21+ years of experience.
+              Chief Medical Officer at Gaden Jangtse Hospital, Mundgod, Karnataka.
             </p>
-            <p style={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.5)" }}>
-              Contact:{" "}
-              <a
-                href={`mailto:${APP_CONFIG.contact.email}`}
-                style={{ color: "rgba(255,255,255,0.7)", textDecoration: "underline" }}
-              >
-                {APP_CONFIG.contact.email}
-              </a>
+            <p style={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)", marginBottom: "1.25rem" }}>
+              Accessible, evidence-based online consultations via Google Meet.
             </p>
           </div>
 
@@ -87,10 +81,11 @@ export default function SiteFooter() {
             <nav aria-label="Footer navigation">
               <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 {[
+                  { label: "Consult For (Clinical Focus)", href: "/#consult-for" },
                   { label: "About Dr. Dhondup Tashi", href: "/#about" },
                   { label: "How It Works", href: "/#how-it-works" },
+                  { label: "Consultation Details & Fees", href: "/#consultations" },
                   { label: "Book an Appointment", href: "/book" },
-                  { label: "Online Payment Checkout", href: "/checkout" },
                 ].map((item) => (
                   <li key={item.href}>
                     <Link

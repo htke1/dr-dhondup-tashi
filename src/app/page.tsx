@@ -2,6 +2,7 @@ import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
 import {
   HeroSection,
+  ConsultForSection,
   HowItWorksSection,
   AboutSection,
   ConsultationInfoSection,
@@ -32,6 +33,7 @@ export default function HomePage() {
         </a>
 
         <HeroSection />
+        <ConsultForSection />
         <HowItWorksSection />
         <AboutSection />
         <ConsultationInfoSection />

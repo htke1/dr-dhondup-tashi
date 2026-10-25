@@ -62,9 +62,10 @@ export default function SiteNav() {
               gap: "2rem",
             }}
           >
+            <NavLink href="/#consult-for">Consult For</NavLink>
             <NavLink href="/#about">About</NavLink>
             <NavLink href="/#how-it-works">How It Works</NavLink>
-            <NavLink href="/#consultations">Consultations</NavLink>
+            <NavLink href="/#consultations">Pricing & Details</NavLink>
             <Link href="/book" className="btn btn-primary btn-sm" id="nav-book-btn">
               Book Appointment
             </Link>
@@ -115,9 +116,10 @@ export default function SiteNav() {
           }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            <MobileNavLink href="/#about" onClick={() => setMenuOpen(false)}>About</MobileNavLink>
+            <MobileNavLink href="/#consult-for" onClick={() => setMenuOpen(false)}>Consult For</MobileNavLink>
+            <MobileNavLink href="/#about" onClick={() => setMenuOpen(false)}>About Dr. Tashi</MobileNavLink>
             <MobileNavLink href="/#how-it-works" onClick={() => setMenuOpen(false)}>How It Works</MobileNavLink>
-            <MobileNavLink href="/#consultations" onClick={() => setMenuOpen(false)}>Consultations</MobileNavLink>
+            <MobileNavLink href="/#consultations" onClick={() => setMenuOpen(false)}>Pricing & Details</MobileNavLink>
             <div style={{ paddingTop: "0.75rem" }}>
               <Link
                 href="/book"

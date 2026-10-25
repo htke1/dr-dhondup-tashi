@@ -52,6 +52,16 @@ export default function BookingPage() {
     preferredLanguage: "",
   });
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const urlReason = params.get("reason");
+      if (urlReason) {
+        setPatientData((prev) => ({ ...prev, reasonForConsultation: urlReason }));
+      }
+    }
+  }, []);
+
   const goToStep = useCallback((step: Step) => setCurrentStep(step), []);
 
   return (
@@ -705,13 +715,66 @@ function StepPatientDetails({
 
           {/* Reason */}
           <div className="form-group">
-            <label htmlFor="reasonForConsultation" className="form-label">
+            <label htmlFor="reasonForConsultation" className="form-label" style={{ marginBottom: "0.35rem" }}>
               Reason for consultation <span style={{ color: "var(--color-charcoal-muted)", fontWeight: 400 }}>(optional)</span>
             </label>
+
+            {/* Quick Topic Chips from Clinical Expertise */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem", marginBottom: "0.625rem" }}>
+              {[
+                "Full Body Check-up",
+                "Liver / Hepatitis B",
+                "Diabetes & BP",
+                "Gastrointestinal / Digestion",
+                "Kidney Health",
+                "Minor Surgical Opinion",
+                "General Medical Care",
+                "USG Report Review",
+                "ECHO Report Review",
+              ].map((topic) => {
+                const isSelected = data.reasonForConsultation.includes(topic);
+                return (
+                  <button
+                    key={topic}
+                    type="button"
+                    onClick={() => {
+                      if (isSelected) {
+                        const cleaned = data.reasonForConsultation
+                          .replace(topic, "")
+                          .replace(/,\s*,/g, ",")
+                          .replace(/^,\s*|,\s*$/g, "")
+                          .trim();
+                        update("reasonForConsultation", cleaned);
+                      } else {
+                        update(
+                          "reasonForConsultation",
+                          data.reasonForConsultation ? `${data.reasonForConsultation}, ${topic}` : topic
+                        );
+                      }
+                    }}
+                    style={{
+                      fontSize: "0.75rem",
+                      padding: "0.25rem 0.6rem",
+                      borderRadius: "var(--radius-full)",
+                      border: isSelected ? "1px solid var(--color-maroon)" : "1px solid var(--color-border-soft)",
+                      background: isSelected ? "var(--color-maroon-muted)" : "var(--color-cream)",
+                      color: isSelected ? "var(--color-maroon)" : "var(--color-charcoal-mid)",
+                      cursor: "pointer",
+                      fontWeight: isSelected ? 600 : 500,
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    {isSelected ? "✓ " : "+ "}
+                    {topic}
+                  </button>
+                );
+              })}
+            </div>
+
             <textarea
               id="reasonForConsultation"
               className="form-input"
-              placeholder="Briefly describe the reason for your consultation (max 500 characters)"
+              placeholder="Click topics above or describe your symptoms / reports..."
               value={data.reasonForConsultation}
               onChange={(e) => update("reasonForConsultation", e.target.value)}
               maxLength={500}
