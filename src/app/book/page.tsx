@@ -70,28 +70,39 @@ export default function BookingPage() {
 
   const isFirstRender = useRef(true);
 
-  const scrollToTop = useCallback(() => {
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-      // Fallback timeout to ensure scroll reaches top even after DOM layout updates
-      setTimeout(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-      }, 50);
-    }
+  const scrollToForm = useCallback(() => {
+    if (typeof window === "undefined") return;
+
+    const performScroll = () => {
+      const panel = document.getElementById("booking-step-panel");
+      if (panel) {
+        const navEl = document.querySelector(".site-nav");
+        const navHeight = navEl ? navEl.getBoundingClientRect().height : 68;
+        // Position top of form card comfortably right below the sticky navbar
+        const targetY = panel.getBoundingClientRect().top + window.pageYOffset - (navHeight + 16);
+        window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    };
+
+    performScroll();
+    // Safety check after DOM mount to guarantee proper positioning
+    setTimeout(performScroll, 60);
   }, []);
 
   const goToStep = useCallback((step: Step) => {
     setCurrentStep(step);
-    scrollToTop();
-  }, [scrollToTop]);
+    scrollToForm();
+  }, [scrollToForm]);
 
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
-    scrollToTop();
-  }, [currentStep, scrollToTop]);
+    scrollToForm();
+  }, [currentStep, scrollToForm]);
 
   return (
     <>
@@ -188,7 +199,10 @@ export default function BookingPage() {
           </div>
 
           {/* Step panels */}
-          <div style={{ maxWidth: "720px", margin: "0 auto" }}>
+          <div
+            id="booking-step-panel"
+            style={{ maxWidth: "720px", margin: "0 auto", scrollMarginTop: "85px" }}
+          >
             {currentStep === 1 && (
               <StepDateSelect
                 selectedDate={selectedDate}
