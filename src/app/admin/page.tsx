@@ -267,6 +267,30 @@ export default function AdminDashboardPage() {
             >
               Physician Portal
             </span>
+            <span
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                padding: "0.2rem 0.55rem",
+                borderRadius: "var(--radius-full)",
+                background: isDevMock ? "var(--color-saffron-pale)" : "#E8F5E9",
+                color: isDevMock ? "var(--color-saffron)" : "#2E7D32",
+                border: isDevMock ? "1px solid rgba(196,127,58,0.3)" : "1px solid #A5D6A7",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.35rem",
+              }}
+            >
+              <span
+                style={{
+                  width: "6px",
+                  height: "6px",
+                  borderRadius: "50%",
+                  background: isDevMock ? "var(--color-saffron)" : "#2E7D32",
+                }}
+              />
+              {isDevMock ? "Database: Mock Mode" : "Supabase: Connected"}
+            </span>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
@@ -426,8 +450,52 @@ export default function AdminDashboardPage() {
                 Loading consultation records...
               </div>
             ) : appointments.length === 0 ? (
-              <div className="card card-padded" style={{ textAlign: "center", color: "var(--color-charcoal-soft)" }}>
-                No consultations found for this filter.
+              <div
+                className="card card-padded"
+                style={{
+                  textAlign: "center",
+                  padding: "3rem 1.5rem",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  color: "var(--color-charcoal-soft)",
+                }}
+              >
+                <div
+                  style={{
+                    width: "48px",
+                    height: "48px",
+                    borderRadius: "50%",
+                    background: "var(--color-cream-soft)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--color-maroon)",
+                    marginBottom: "0.25rem",
+                  }}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                </div>
+                <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.2rem", color: "var(--color-charcoal)" }}>
+                  No consultations booked yet
+                </h3>
+                <p style={{ maxWidth: "460px", fontSize: "0.875rem", lineHeight: 1.5, margin: 0 }}>
+                  Your Supabase PostgreSQL database is connected and listening for live bookings. Once a patient completes checkout, their record, clinical intake, and Google Meet room will appear here automatically.
+                </p>
+                <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.75rem" }}>
+                  <Link href="/book" target="_blank" className="btn btn-primary btn-sm">
+                    Open Patient Booking Page
+                  </Link>
+                  <button onClick={() => setActiveTab("schedule")} className="btn btn-secondary btn-sm">
+                    Test Blocked Dates
+                  </button>
+                </div>
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>

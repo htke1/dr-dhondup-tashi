@@ -57,13 +57,13 @@ export async function POST(request: NextRequest) {
           slot_time,
           status,
           consultation_fee,
+          reason_for_consultation,
+          preferred_language,
           patients (
             name,
             email,
             phone,
-            age,
-            preferred_language,
-            reason_for_consultation
+            age
           )
         `)
         .eq("id", appointmentId)
@@ -81,8 +81,8 @@ export async function POST(request: NextRequest) {
     const patientEmail = patientData?.email || body.patientEmail || "patient@example.com";
     const patientPhone = patientData?.phone || body.patientPhone || "+91 9999999999";
     const patientAge = patientData?.age || body.patientAge;
-    const preferredLanguage = patientData?.preferred_language || body.preferredLanguage;
-    const reason = patientData?.reason_for_consultation || body.reason;
+    const preferredLanguage = appointmentData?.preferred_language || patientData?.preferred_language || body.preferredLanguage;
+    const reason = appointmentData?.reason_for_consultation || patientData?.reason_for_consultation || body.reason;
     const appointmentDate = appointmentData?.appointment_date || body.appointmentDate || "2026-10-26";
     const slotTime = appointmentData?.slot_time || body.slotTime || "19:00";
 

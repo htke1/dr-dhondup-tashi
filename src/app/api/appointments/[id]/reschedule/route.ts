@@ -137,7 +137,6 @@ export async function POST(
       new_date: newDate,
       new_slot: newSlotTime,
       reason: reason || "Patient requested reschedule",
-      rescheduled_by: "patient",
     });
 
     // 9. Send Reschedule Confirmation Email
