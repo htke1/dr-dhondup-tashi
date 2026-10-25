@@ -19,6 +19,7 @@ interface PatientFormData {
   age: string;
   reasonForConsultation: string;
   preferredLanguage: "english" | "tibetan" | "";
+  isFamilyHeadDiscount: boolean;
 }
 
 interface SelectedSlot {
@@ -50,6 +51,7 @@ export default function BookingPage() {
     age: "",
     reasonForConsultation: "",
     preferredLanguage: "",
+    isFamilyHeadDiscount: false,
   });
 
   useEffect(() => {
@@ -58,6 +60,10 @@ export default function BookingPage() {
       const urlReason = params.get("reason");
       if (urlReason) {
         setPatientData((prev) => ({ ...prev, reasonForConsultation: urlReason }));
+      }
+      const subsidyParam = params.get("subsidy") || params.get("initiative");
+      if (subsidyParam === "father" || subsidyParam === "family-head" || subsidyParam === "true") {
+        setPatientData((prev) => ({ ...prev, isFamilyHeadDiscount: true }));
       }
     }
   }, []);
@@ -558,7 +564,7 @@ function StepPatientDetails({
 }) {
   const [errors, setErrors] = useState<Partial<Record<keyof PatientFormData, string>>>({});
 
-  const update = (field: keyof PatientFormData, value: string) => {
+  const update = (field: keyof PatientFormData, value: any) => {
     onDataChange({ ...data, [field]: value });
     if (errors[field]) setErrors((e) => ({ ...e, [field]: undefined }));
   };
@@ -814,6 +820,71 @@ function StepPatientDetails({
               This helps the doctor prepare. The website interface is English-only.
             </span>
           </div>
+
+          {/* Dr. Tashi's Family Head & Father Clinical Subsidy */}
+          <div
+            onClick={() => update("isFamilyHeadDiscount", !data.isFamilyHeadDiscount)}
+            style={{
+              background: data.isFamilyHeadDiscount ? "rgba(123, 45, 62, 0.05)" : "var(--color-cream)",
+              border: `1.5px solid ${data.isFamilyHeadDiscount ? "var(--color-maroon)" : "var(--color-border-soft)"}`,
+              borderRadius: "var(--radius-md)",
+              padding: "1rem 1.125rem",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+              <input
+                id="isFamilyHeadDiscount"
+                type="checkbox"
+                checked={data.isFamilyHeadDiscount}
+                onChange={(e) => update("isFamilyHeadDiscount", e.target.checked)}
+                style={{
+                  marginTop: "0.2rem",
+                  accentColor: "var(--color-maroon)",
+                  width: "18px",
+                  height: "18px",
+                  cursor: "pointer",
+                  flexShrink: 0,
+                }}
+                onClick={(e) => e.stopPropagation()}
+              />
+              <div>
+                <label
+                  htmlFor="isFamilyHeadDiscount"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    flexWrap: "wrap",
+                    marginBottom: "0.35rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  <span style={{ fontWeight: 600, fontSize: "0.9375rem", color: "var(--color-charcoal)" }}>
+                    👨‍👧‍👦 Booking for a Father or Head of the Family?
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "0.7rem",
+                      fontWeight: 700,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                      background: "var(--color-maroon)",
+                      color: "#ffffff",
+                      padding: "0.15rem 0.5rem",
+                      borderRadius: "var(--radius-full)",
+                    }}
+                  >
+                    50% Clinical Subsidy · ₹500
+                  </span>
+                </label>
+                <p style={{ fontSize: "0.8125rem", color: "var(--color-charcoal-soft)", lineHeight: 1.5, margin: 0 }}>
+                  In Dr. Dhondup Tashi’s 21+ years of practice, fathers and family heads frequently delay medical attention until symptoms become severe. To encourage early evaluation, this consultation is subsidized by 50% (₹500 instead of ₹1,000).
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Privacy notice */}
@@ -889,6 +960,7 @@ function StepReview({
           language: patient.preferredLanguage === "tibetan" ? "Tibetan" : "English",
           appointmentDate: slot.date,
           slotTime: slot.slotId,
+          isFamilyHeadDiscount: !!patient.isFamilyHeadDiscount,
         }),
       });
 
@@ -1029,7 +1101,27 @@ function StepReview({
     { label: "Time", value: `${slot.slotLabel} IST` },
     { label: "Duration", value: `${APP_CONFIG.appointmentDurationMinutes} minutes` },
     { label: "Format", value: "Online via Google Meet" },
-    { label: "Consultation fee", value: APP_CONFIG.consultationFeeDisplay },
+    ...(patient.isFamilyHeadDiscount
+      ? [
+          { label: "Standard fee", value: "₹1,000" },
+          {
+            label: "Family Head Subsidy (50%)",
+            value: (
+              <span style={{ color: "var(--color-maroon)", fontWeight: 600 }}>
+                -₹500 (Dr. Tashi Community Initiative)
+              </span>
+            ),
+          },
+          {
+            label: "Total payable",
+            value: (
+              <span style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--color-maroon)" }}>
+                ₹500
+              </span>
+            ),
+          },
+        ]
+      : [{ label: "Consultation fee", value: APP_CONFIG.consultationFeeDisplay }]),
     { label: "Patient name", value: patient.fullName },
     { label: "Mobile", value: patient.mobileNumber },
     { label: "Email", value: patient.emailAddress },
@@ -1193,7 +1285,9 @@ function StepReview({
         disabled={submitting}
         id="pay-btn"
       >
-        {submitting ? "Processing payment..." : `Proceed to Payment — ${APP_CONFIG.consultationFeeDisplay}`}
+        {submitting
+          ? "Processing payment..."
+          : `Proceed to Payment — ${patient.isFamilyHeadDiscount ? APP_CONFIG.familyHeadSubsidy.feeDisplay : APP_CONFIG.consultationFeeDisplay}`}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>

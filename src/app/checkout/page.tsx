@@ -443,10 +443,18 @@ export default function StandardCheckoutPage() {
                     </div>
                     <button
                       type="button"
+                      onClick={() => setAmountInRupees(500)}
+                      className="btn btn-secondary btn-sm"
+                      title="50% Clinical Subsidy for Father / Family Head"
+                    >
+                      ₹500 (Subsidy)
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setAmountInRupees(1000)}
                       className="btn btn-secondary btn-sm"
                     >
-                      Reset ₹1,000
+                      ₹1,000 (Standard)
                     </button>
                   </div>
                   <span style={{ fontSize: "0.75rem", color: "var(--color-charcoal-muted)", marginTop: "0.25rem", display: "block" }}>

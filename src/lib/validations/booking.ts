@@ -30,6 +30,7 @@ export const patientFormSchema = z.object({
     .trim()
     .max(50)
     .default("English"),
+  isFamilyHeadDiscount: z.boolean().optional().default(false),
 });
 
 export const createBookingHoldSchema = patientFormSchema.extend({

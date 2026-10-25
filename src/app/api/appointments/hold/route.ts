@@ -27,9 +27,14 @@ export async function POST(request: NextRequest) {
       age,
       reason,
       language,
+      isFamilyHeadDiscount,
       appointmentDate,
       slotTime,
     } = parseResult.data;
+
+    const consultationFee = isFamilyHeadDiscount
+      ? APP_CONFIG.familyHeadSubsidy.fee
+      : APP_CONFIG.consultationFee;
 
     // 2. Server-side timing rules (6 PM cutoff, past date check, 14-day limit)
     const timingCheck = validateBookingTiming(appointmentDate, slotTime);
@@ -53,7 +58,8 @@ export async function POST(request: NextRequest) {
           appointmentId: "mock-apt-" + Date.now(),
           appointmentDate,
           slotTime,
-          consultationFee: APP_CONFIG.consultationFee,
+          consultationFee,
+          isFamilyHeadDiscount: !!isFamilyHeadDiscount,
         },
         { status: 200 }
       );
@@ -132,9 +138,11 @@ export async function POST(request: NextRequest) {
         appointment_date: appointmentDate,
         slot_time: slotTime,
         status: "pending_payment",
-        consultation_fee: APP_CONFIG.consultationFee,
+        consultation_fee: consultationFee,
         payment_status: "pending",
-        reason_for_consultation: reason || null,
+        reason_for_consultation: isFamilyHeadDiscount
+          ? `[Family Head / Father Initiative] ${reason || ""}`.trim()
+          : (reason || null),
         preferred_language: language,
         hold_expires_at: holdExpiresAt,
       })
@@ -166,6 +174,7 @@ export async function POST(request: NextRequest) {
         appointmentDate: appointment.appointment_date,
         slotTime: appointment.slot_time,
         consultationFee: appointment.consultation_fee,
+        isFamilyHeadDiscount: !!isFamilyHeadDiscount,
         holdExpiresAt: appointment.hold_expires_at,
         message: "Slot held successfully for 15 minutes pending payment.",
       },

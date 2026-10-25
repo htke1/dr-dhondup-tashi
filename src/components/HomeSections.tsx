@@ -537,9 +537,9 @@ export function HowItWorksSection() {
     },
     {
       number: "02",
-      title: "Enter details & pay ₹1,000",
+      title: "Enter details & pay",
       description:
-        `Provide your medical reason and preferred language (English or Tibetan). Complete the ${APP_CONFIG.consultationFeeDisplay} payment securely via Razorpay (UPI, Cards, NetBanking).`,
+        `Provide your medical reason and preferred language (English or Tibetan). Complete payment securely via Razorpay (₹1,000 standard, or ₹500 with 50% subsidy for fathers & family heads).`,
       icon: (
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
@@ -959,6 +959,61 @@ export function ConsultationInfoSection() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Family Head & Father Health Initiative */}
+        <div
+          style={{
+            background: "linear-gradient(135deg, rgba(123, 45, 62, 0.08) 0%, rgba(196, 127, 58, 0.08) 100%)",
+            border: "1.5px solid rgba(123, 45, 62, 0.25)",
+            borderRadius: "var(--radius-lg)",
+            padding: "1.5rem 1.75rem",
+            maxWidth: "760px",
+            margin: "0 auto 2rem auto",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.75rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.75rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span style={{ fontSize: "1.3rem" }}>👨‍👧‍👦</span>
+              <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.25rem", color: "var(--color-maroon)", margin: 0 }}>
+                Family Head &amp; Father Health Initiative
+              </h3>
+            </div>
+            <span
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                background: "var(--color-maroon)",
+                color: "#ffffff",
+                padding: "0.25rem 0.65rem",
+                borderRadius: "var(--radius-full)",
+              }}
+            >
+              50% Subsidy · ₹500
+            </span>
+          </div>
+
+          <p style={{ fontSize: "0.9rem", color: "var(--color-charcoal-mid)", lineHeight: 1.6, margin: 0 }}>
+            In over 21 years of clinical practice, Dr. Dhondup Tashi has observed that fathers and family heads frequently prioritize their household responsibilities over their personal wellbeing, often delaying medical care until conditions become critical. To encourage proactive checkups, early screening, and timely intervention, a <strong>50% clinical subsidy (₹500 consultation fee)</strong> is available for all fathers and family heads.
+          </p>
+
+          <div style={{ marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+            <Link
+              href="/book?subsidy=father"
+              className="btn btn-primary btn-sm"
+              style={{ textDecoration: "none" }}
+            >
+              Book Subsidized Consultation (₹500) &rarr;
+            </Link>
+            <span style={{ fontSize: "0.8rem", color: "var(--color-charcoal-soft)" }}>
+              No coupon required · 1-click selection in booking details
+            </span>
+          </div>
         </div>
 
         {/* Important notice */}

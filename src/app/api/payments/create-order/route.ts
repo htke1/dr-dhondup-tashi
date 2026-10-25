@@ -14,23 +14,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const amountInPaise = APP_CONFIG.consultationFeeINR * 100; // 100000 paise = ₹1,000 INR
+    let amountInPaise = APP_CONFIG.consultationFeeINR * 100; // default 100000 paise = ₹1,000 INR
 
-    // If Razorpay is not configured (e.g. initial dev setup)
-    if (!isRazorpayConfigured()) {
-      const mockOrderId = `order_mock_${Date.now()}`;
-      return NextResponse.json({
-        developmentMock: true,
-        orderId: mockOrderId,
-        amount: amountInPaise,
-        currency: "INR",
-        keyId: "rzp_test_placeholder",
-        consultationFeeDisplay: APP_CONFIG.consultationFeeDisplay,
-        message: "Operating in development mock mode. Provide real RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env.local for live test gateway.",
-      });
-    }
-
-    // Connect to Supabase to verify hold is still valid
+    // Connect to Supabase to verify hold is still valid and fetch fee
     try {
       const supabase = getAdminSupabase();
       const { data: apt, error: aptError } = await supabase
@@ -61,8 +47,25 @@ export async function POST(request: NextRequest) {
           { status: 410 }
         );
       }
+
+      if (appointment.consultation_fee) {
+        amountInPaise = Math.round(appointment.consultation_fee * 100);
+      }
     } catch {
-      // If Supabase is not reachable, proceed in development mode
+      // If Supabase is not reachable, proceed
+    }
+
+    if (!isRazorpayConfigured()) {
+      const mockOrderId = `order_mock_${Date.now()}`;
+      return NextResponse.json({
+        developmentMock: true,
+        orderId: mockOrderId,
+        amount: amountInPaise,
+        currency: "INR",
+        keyId: "rzp_test_placeholder",
+        consultationFeeDisplay: `₹${(amountInPaise / 100).toLocaleString("en-IN")}`,
+        message: "Operating in development mock mode. Provide real RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env.local for live test gateway.",
+      });
     }
 
     // Create real order in Razorpay

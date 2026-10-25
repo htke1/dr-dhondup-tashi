@@ -546,6 +546,21 @@ export default function AdminDashboardPage() {
                                 🌐 {apt.preferred_language}
                               </span>
                             )}
+                            {(apt.consultation_fee === 500 || apt.reason_for_consultation?.includes("[Family Head / Father Initiative]")) && (
+                              <span
+                                style={{
+                                  fontSize: "0.75rem",
+                                  fontWeight: 600,
+                                  padding: "0.15rem 0.5rem",
+                                  borderRadius: "var(--radius-full)",
+                                  background: "var(--color-maroon-muted)",
+                                  color: "var(--color-maroon)",
+                                  border: "1px solid rgba(123,45,62,0.25)",
+                                }}
+                              >
+                                👨‍👧‍👦 Family Head Subsidy (₹500)
+                              </span>
+                            )}
                           </div>
                           <p style={{ fontSize: "0.875rem", color: "var(--color-charcoal-soft)" }}>
                             Age: {apt.patients?.age} · Phone: {apt.patients?.phone} · Email: {apt.patients?.email}

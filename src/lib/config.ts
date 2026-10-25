@@ -83,6 +83,17 @@ export const APP_CONFIG = {
   /** Human-readable fee string */
   consultationFeeDisplay: "₹1,000",
 
+  /** Family Head & Father Health Initiative (50% Clinical Subsidy) */
+  familyHeadSubsidy: {
+    enabled: true,
+    discountPercent: 50,
+    fee: 500,
+    feeDisplay: "₹500",
+    name: "Family Head & Father Health Initiative",
+    rationale:
+      "Dr. Dhondup Tashi's clinical observation across 21+ years: Fathers and family heads frequently delay medical attention until illnesses reach late stages. We offer this 50% clinical subsidy to encourage early diagnosis and timely care.",
+  },
+
   /** Daily appointment slots (times in HH:mm, 24-hour, Asia/Kolkata) */
   slots: [
     { id: "19:00", startHHmm: "19:00", endHHmm: "19:20", label: "7:00 PM – 7:20 PM" },
