@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, Fragment } from "react";
+import { useState, useCallback, useEffect, useRef, Fragment } from "react";
 import Link from "next/link";
 import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
@@ -68,7 +68,30 @@ export default function BookingPage() {
     }
   }, []);
 
-  const goToStep = useCallback((step: Step) => setCurrentStep(step), []);
+  const isFirstRender = useRef(true);
+
+  const scrollToTop = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+      // Fallback timeout to ensure scroll reaches top even after DOM layout updates
+      setTimeout(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+      }, 50);
+    }
+  }, []);
+
+  const goToStep = useCallback((step: Step) => {
+    setCurrentStep(step);
+    scrollToTop();
+  }, [scrollToTop]);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    scrollToTop();
+  }, [currentStep, scrollToTop]);
 
   return (
     <>
@@ -200,7 +223,7 @@ export default function BookingPage() {
                 onBack={() => goToStep(3)}
                 onConfirmed={(apt) => {
                   setConfirmedAppointment(apt);
-                  setCurrentStep(5);
+                  goToStep(5);
                 }}
               />
             )}
