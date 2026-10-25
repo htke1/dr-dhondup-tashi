@@ -26,6 +26,8 @@ export default function StandardCheckoutPage() {
     verified: boolean;
   } | null>(null);
 
+  const activeKeyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "";
+
   /**
    * Dynamically loads Razorpay checkout.js script if not present
    */
@@ -231,30 +233,54 @@ export default function StandardCheckoutPage() {
             </p>
           </div>
 
-          {/* Test Mode Notification */}
-          <div
-            style={{
-              background: "#FFF8E1",
-              border: "1px solid #FFE082",
-              borderRadius: "var(--radius-md)",
-              padding: "0.875rem 1.25rem",
-              marginBottom: "1.5rem",
-              fontSize: "0.8125rem",
-              color: "#6D4C41",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.75rem",
-            }}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, color: "#F57F17" }}>
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-            <div>
-              <strong>Active Gateway:</strong> Razorpay Test Mode (<code style={{ background: "rgba(0,0,0,0.05)", padding: "2px 4px", borderRadius: "4px" }}>rzp_test_Ts0rHJnCiFLX2P</code>). You can use any test UPI ID or test card to simulate a live transaction.
+          {/* Mode Notification */}
+          {activeKeyId.startsWith("rzp_live_") ? (
+            <div
+              style={{
+                background: "#E8F5E9",
+                border: "1px solid #A5D6A7",
+                borderRadius: "var(--radius-md)",
+                padding: "0.875rem 1.25rem",
+                marginBottom: "1.5rem",
+                fontSize: "0.8125rem",
+                color: "#1B5E20",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ flexShrink: 0, color: "#2E7D32" }}>
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              <div>
+                <strong>Active Gateway: Razorpay Live Production Mode</strong> (<code style={{ background: "rgba(0,0,0,0.05)", padding: "2px 4px", borderRadius: "4px" }}>{activeKeyId}</code>). Real transactions via UPI, Credit/Debit Cards, Netbanking, or Wallets will be charged and credited directly to Dr. Dhondup Tashi&apos;s verified merchant account.
+              </div>
             </div>
-          </div>
+          ) : (
+            <div
+              style={{
+                background: "#FFF8E1",
+                border: "1px solid #FFE082",
+                borderRadius: "var(--radius-md)",
+                padding: "0.875rem 1.25rem",
+                marginBottom: "1.5rem",
+                fontSize: "0.8125rem",
+                color: "#6D4C41",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, color: "#F57F17" }}>
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <div>
+                <strong>Active Gateway: Razorpay Test Mode</strong> (<code style={{ background: "rgba(0,0,0,0.05)", padding: "2px 4px", borderRadius: "4px" }}>{activeKeyId || "rzp_test_..."}</code>). You can use test cards or UPI to simulate transactions.
+              </div>
+            </div>
+          )}
 
           {/* Error Alert */}
           {errorMessage && (
