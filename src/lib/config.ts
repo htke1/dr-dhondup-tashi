@@ -12,8 +12,9 @@ export const APP_CONFIG = {
     shortName: "Dr. Dhondup Tashi",
     title: "MBBS, M.Med (Family Medicine)",
     role: "General Physician | Clinical Sonologist | Chief Medical Officer | Community Health Advocate",
-    experience: "21+ Years Clinical Experience",
+    experience: "Years of Clinical Practice",
     hospital: "Gaden Jangtse Hospital, Mundgod, Karnataka, India",
+    email: "dhontash@gmail.com",
     photoUrl: "/images/HomePagePicture.jpeg",
     aboutPhotoUrl: "/images/AboutPicture.jpeg",
   },
@@ -82,6 +83,17 @@ export const APP_CONFIG = {
   consultationFeeINR: 1000,
   /** Human-readable fee string */
   consultationFeeDisplay: "₹1,000",
+
+  /** Payment Gateway & UPI Configuration */
+  payment: {
+    mode: (process.env.NEXT_PUBLIC_PAYMENT_MODE || "upi_qr") as "upi_qr" | "razorpay",
+    upi: {
+      vpa: process.env.UPI_ID || "dhontash@okicici",
+      recipientName: process.env.UPI_RECIPIENT_NAME || "Dhondup Tashi",
+      currency: "INR",
+      manualVerification: true,
+    },
+  },
 
   /** Family Head & Father Health Initiative (50% Clinical Subsidy) */
   familyHeadSubsidy: {

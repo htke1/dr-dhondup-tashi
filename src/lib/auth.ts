@@ -7,6 +7,23 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "drdhondup.tashi@gmail.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "tashi2026"; // Default dev password
 
 /**
+ * Checks if the provided email matches any authorized administrative or physician email.
+ */
+export function isAllowedAdminEmail(email: string): boolean {
+  if (!email) return false;
+  const normalized = email.trim().toLowerCase();
+  const allowed = [
+    ADMIN_EMAIL.toLowerCase(),
+    (process.env.DOCTOR_EMAIL || "dhontash@gmail.com").toLowerCase(),
+    (process.env.DOCTOR_NOTIFICATION_EMAIL || "dhontash@gmail.com").toLowerCase(),
+    (process.env.ADMIN_NOTIFICATION_EMAIL || "sheraptenzin98@gmail.com").toLowerCase(),
+    "dhontash@gmail.com",
+    "sheraptenzin98@gmail.com",
+  ];
+  return allowed.includes(normalized);
+}
+
+/**
  * Creates a signed session token.
  */
 export function createSessionToken(email: string): string {

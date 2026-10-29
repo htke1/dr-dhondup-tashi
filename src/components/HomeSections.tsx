@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { APP_CONFIG } from "@/lib/config";
+import FamilyHeadIcon from "@/components/FamilyHeadIcon";
 
 /* =========================================================
    HERO SECTION
@@ -251,7 +252,7 @@ export function HeroSection() {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  21+ Yrs Exp
+                  Clinical Sonologist
                 </div>
               </div>
             </div>
@@ -272,8 +273,11 @@ export function ConsultForSection() {
       category: "Preventive Medicine",
       description: "Routine health screening, risk factor evaluation, lifestyle modifications, and proactive disease prevention.",
       icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M4.5 3v5a4.5 4.5 0 0 0 9 0V3" />
+          <path d="M18 3v5a9 9 0 0 1-18 0V3" />
+          <path d="M18 8v8a3 3 0 0 1-3 3h-1" />
+          <circle cx="11" cy="19" r="3" />
         </svg>
       ),
     },
@@ -282,9 +286,11 @@ export function ConsultForSection() {
       category: "Hepatology",
       description: "Evaluation and management of Fatty Liver, Chronic Hepatitis B, elevated liver enzymes, and chronic hepatic conditions.",
       icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M12 6v6l4 2"/>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M4 14c-.8-3.5 1-7.5 5.5-8.5 5-1.2 9.5.5 10.5 3 1.2 3 .5 7-2.5 8.5-3.5 1.8-9.5 1.5-13.5-3z" />
+          <path d="M13 5.8c.2 3.2-1 6.2-3.5 8.2" />
+          <path d="M11 17.5v2.5" />
+          <path d="M9.5 20h3" />
         </svg>
       ),
     },
@@ -293,9 +299,9 @@ export function ConsultForSection() {
       category: "Endocrinology & Cardio-metabolic",
       description: "Personalized clinical guidance for Type 2 Diabetes, high blood pressure, hyperlipidemia, and metabolic health.",
       icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 2.7l5.66 5.66a8 8 0 1 1-11.31 0z" />
+          <path d="M8.5 13h1.5l1-2 1.5 4 1-2h2" />
         </svg>
       ),
     },
@@ -304,12 +310,9 @@ export function ConsultForSection() {
       category: "Gastroenterology",
       description: "Diagnosis and care for chronic acidity, GERD, gastritis, irritable bowel syndrome (IBS), and recurrent indigestion.",
       icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
-          <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
-          <line x1="6" y1="1" x2="6" y2="4"/>
-          <line x1="10" y1="1" x2="10" y2="4"/>
-          <line x1="14" y1="1" x2="14" y2="4"/>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M10 2v4c0 1.5-.8 3-1.8 4.5-1.5 2.2-1.7 4.8-.7 7.2 1.2 2.8 4 4.3 7 4.3 4.5 0 7.5-3.2 7.5-7.5 0-3.5-1.8-5.8-3.5-7.2-.8-.7-1.5-1.5-1.5-3.3V2" />
+          <path d="M10.5 11.5c1 1.5 1.8 2.8 1.8 4.5 0 1.5-.8 2.5-2.3 2.5" />
         </svg>
       ),
     },
@@ -318,8 +321,11 @@ export function ConsultForSection() {
       category: "Nephrology",
       description: "Renal health evaluation, chronic kidney disease monitoring, proteinuria review, and stone recurrence prevention.",
       icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M7.5 3.5C4.5 5.2 3 8.8 3 13c0 4.8 2.8 8.5 7 8.5 3.8 0 6.5-3 6.5-7.5 0-2.2-.6-4.2-1.8-5.8" />
+          <path d="M14.7 8.2c-.8-1.5-2-2.8-3.5-3.5-1.2-.6-2.5-.9-3.7-.9" />
+          <path d="M14.5 12c-1.5 0-2.5 1-2.5 2s1 2 2.5 2" />
+          <path d="M14 14h3.5v7" />
         </svg>
       ),
     },
@@ -328,8 +334,11 @@ export function ConsultForSection() {
       category: "Surgical Second Opinions",
       description: "Clinical evaluation for minor surgical conditions, post-operative wound healing, and surgical second opinions.",
       icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="m19 4-3.5 3.5 1.5 1.5L20.5 5.5A1.4 1.4 0 0 0 19 4z" />
+          <path d="M15.5 7.5 5 18a2.12 2.12 0 0 0 3 3L18.5 10.5" />
+          <line x1="8" y1="15" x2="10" y2="17" />
+          <line x1="10" y1="13" x2="12" y2="15" />
         </svg>
       ),
     },
@@ -338,11 +347,10 @@ export function ConsultForSection() {
       category: "Primary & Family Care",
       description: "Comprehensive medical assessments for multi-system symptoms, chronic illnesses, and ongoing health management.",
       icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
-          <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
-          <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
-          <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <line x1="12" y1="8" x2="12" y2="14" />
+          <line x1="9" y1="11" x2="15" y2="11" />
         </svg>
       ),
     },
@@ -351,9 +359,12 @@ export function ConsultForSection() {
       category: "Clinical Sonology",
       description: "Detailed secondary review and clinical explanation of abdominal, pelvic, thyroid, and general sonography scans.",
       icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <rect x="8" y="2" width="8" height="8" rx="2" />
+          <path d="M6 10h12l-1.5 3.5a2 2 0 0 1-1.8 1.5H9.3a2 2 0 0 1-1.8-1.5L6 10z" />
+          <path d="M8.5 18c2.2 1.2 4.8 1.2 7 0" />
+          <path d="M6 21c3.8 2 8.2 2 12 0" />
+          <line x1="12" y1="2" x2="12" y2="5" />
         </svg>
       ),
     },
@@ -362,8 +373,9 @@ export function ConsultForSection() {
       category: "Cardiac Imaging Review",
       description: "In-depth review of echocardiogram findings, ejection fraction, valve evaluations, and cardiac ultrasound reports.",
       icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M19.5 12.572l-7.5 7.428-7.5-7.428A5 5 0 1 1 12 6.5a5 5 0 1 1 7.5 6.072z" />
+          <path d="M8 12.5h2l1.2-2.5 1.6 5 1.2-2.5h2" />
         </svg>
       ),
     },
@@ -965,47 +977,26 @@ export function ConsultationInfoSection() {
         </div>
 
         {/* Family Head & Father Health Initiative */}
-        <div
-          style={{
-            background: "linear-gradient(135deg, rgba(123, 45, 62, 0.08) 0%, rgba(196, 127, 58, 0.08) 100%)",
-            border: "1.5px solid rgba(123, 45, 62, 0.25)",
-            borderRadius: "var(--radius-lg)",
-            padding: "1.5rem 1.75rem",
-            maxWidth: "760px",
-            margin: "0 auto 2rem auto",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.75rem",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.75rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <span style={{ fontSize: "1.3rem" }}>👨‍👧‍👦</span>
-              <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.25rem", color: "var(--color-maroon)", margin: 0 }}>
+        <div className="family-initiative-card">
+          <div className="family-initiative-header">
+            <div className="family-initiative-title-group">
+              <div className="family-initiative-icon-box" aria-hidden="true">
+                <FamilyHeadIcon size={20} />
+              </div>
+              <h3 className="family-initiative-title">
                 Family Head &amp; Father Health Initiative
               </h3>
             </div>
-            <span
-              style={{
-                fontSize: "0.75rem",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.06em",
-                background: "var(--color-maroon)",
-                color: "#ffffff",
-                padding: "0.25rem 0.65rem",
-                borderRadius: "var(--radius-full)",
-              }}
-            >
+            <span className="family-initiative-badge">
               50% Subsidy · ₹500
             </span>
           </div>
 
-          <p style={{ fontSize: "0.9rem", color: "var(--color-charcoal-mid)", lineHeight: 1.6, margin: 0 }}>
+          <p className="family-initiative-body">
             In his years of clinical practice, Dr. Dhondup Tashi has observed that fathers and family heads frequently prioritize their household responsibilities over their personal wellbeing, often delaying medical care until conditions become critical. To encourage proactive checkups, early screening, and timely intervention, a <strong>50% clinical subsidy (₹500 consultation fee)</strong> is available for all fathers and family heads.
           </p>
 
-          <div style={{ marginTop: "0.5rem", display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+          <div className="family-initiative-actions">
             <Link
               href="/book?subsidy=father"
               className="btn btn-primary btn-sm"
@@ -1013,7 +1004,7 @@ export function ConsultationInfoSection() {
             >
               Book Subsidized Consultation (₹500) &rarr;
             </Link>
-            <span style={{ fontSize: "0.8rem", color: "var(--color-charcoal-soft)" }}>
+            <span className="family-initiative-hint">
               No coupon required · 1-click selection in booking details
             </span>
           </div>

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSessionToken, SESSION_COOKIE_NAME, ADMIN_EMAIL, ADMIN_PASSWORD } from "@/lib/auth";
+import { createSessionToken, SESSION_COOKIE_NAME, isAllowedAdminEmail, ADMIN_PASSWORD } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const isValidEmail = email.trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    const isValidEmail = isAllowedAdminEmail(email);
     const isValidPassword = password === ADMIN_PASSWORD;
 
     if (!isValidEmail || !isValidPassword) {

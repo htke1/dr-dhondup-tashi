@@ -24,6 +24,10 @@ export async function GET(request: NextRequest) {
         status,
         consultation_fee,
         payment_status,
+        payment_check_requested_at,
+        hold_expires_at,
+        razorpay_payment_id,
+        razorpay_order_id,
         google_meet_link,
         reason_for_consultation,
         preferred_language,
@@ -53,13 +57,37 @@ export async function GET(request: NextRequest) {
       query = query.eq("appointment_date", dateFilter);
     }
 
-    const { data, error } = await query;
+    const { data: appointments, error } = await query;
     if (error) {
       console.error("Failed to query appointments:", error);
       throw error;
     }
 
-    return NextResponse.json({ appointments: data || [] });
+    let appointmentsWithReminders = appointments || [];
+    if (appointmentsWithReminders.length > 0) {
+      try {
+        const aptIds = appointmentsWithReminders.map((a: any) => a.id);
+        const { data: reminders } = await supabase
+          .from("payment_verification_reminders")
+          .select("id, appointment_id, reminder_type, scheduled_for, delivery_status, attempt_count, last_error, sent_at")
+          .in("appointment_id", aptIds);
+
+        if (reminders && reminders.length > 0) {
+          const reminderMap = new Map();
+          for (const r of reminders) {
+            reminderMap.set(r.appointment_id, r);
+          }
+          appointmentsWithReminders = appointmentsWithReminders.map((apt: any) => ({
+            ...apt,
+            payment_verification_reminder: reminderMap.get(apt.id) || null,
+          }));
+        }
+      } catch (reminderFetchErr) {
+        console.warn("Could not fetch payment verification reminders:", reminderFetchErr);
+      }
+    }
+
+    return NextResponse.json({ appointments: appointmentsWithReminders });
   } catch (error) {
     // Development fallback mock data for testing before Supabase connection
     const mockAppointments = [

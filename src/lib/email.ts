@@ -36,6 +36,15 @@ interface CancellationEmailData {
   refundAmount?: number;
 }
 
+export interface PaymentVerificationReminderData {
+  appointmentId: string;
+  bookingRef: string;
+  patientName: string;
+  appointmentDate: string;  // YYYY-MM-DD
+  slotTime: string;         // "19:00"
+  consultationFee?: number;
+}
+
 function getResendClient(): Resend | null {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return null;
@@ -52,6 +61,7 @@ function getFromAddress(): string {
 function formatDisplayDate(dateStr: string): string {
   try {
     return new Date(dateStr + "T00:00:00").toLocaleDateString("en-IN", {
+      timeZone: "Asia/Kolkata",
       weekday: "long",
       day: "numeric",
       month: "long",
@@ -233,7 +243,11 @@ export async function sendBookingConfirmationEmail(data: BookingEmailData) {
  */
 export async function sendDoctorNotificationEmail(data: BookingEmailData) {
   const resend = getResendClient();
-  const doctorEmail = process.env.ADMIN_NOTIFICATION_EMAIL || "drdhondup.tashi@gmail.com";
+  const doctorEmail =
+    process.env.DOCTOR_NOTIFICATION_EMAIL ||
+    process.env.DOCTOR_EMAIL ||
+    process.env.ADMIN_NOTIFICATION_EMAIL ||
+    "dhontash@gmail.com";
   const dateStr = formatDisplayDate(data.appointmentDate);
   const timeStr = formatSlotDisplay(data.slotTime);
   const adminUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/admin`;
@@ -490,3 +504,141 @@ export async function sendCancellationEmail(data: CancellationEmailData) {
     return { success: false, error: err };
   }
 }
+
+/**
+ * 6. Automated Doctor Reminder for Manual UPI Payment Verification.
+ * Sent 1 minute after patient taps "I've completed the payment".
+ * Reminds doctor to inspect UPI app or bank account before confirming.
+ * Strictly avoids patient diagnosis, medical notes, or unneeded sensitive data.
+ */
+export async function sendPaymentVerificationReminderEmail(
+  data: PaymentVerificationReminderData
+) {
+  const resend = getResendClient();
+  const doctorEmail =
+    process.env.DOCTOR_NOTIFICATION_EMAIL ||
+    process.env.ADMIN_NOTIFICATION_EMAIL ||
+    "drdhondup.tashi@gmail.com";
+
+  const dateStr = formatDisplayDate(data.appointmentDate);
+  const slotObj = APP_CONFIG.slots.find((s) => s.id === data.slotTime);
+  const timeStr = slotObj ? slotObj.label : data.slotTime;
+  const feeDisplay = data.consultationFee
+    ? `₹${data.consultationFee.toLocaleString("en-IN")}`
+    : "₹1,000";
+  const bookingRef = data.bookingRef;
+  const adminUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/admin`;
+
+  const subject = `Payment Verification Needed — ${bookingRef}`;
+
+  const plainText = `A patient has indicated that they attempted to pay for an online consultation. Please check your UPI app or bank account to determine whether the payment was received.
+
+Patient name: ${data.patientName}
+Appointment date: ${dateStr}
+Appointment time: ${timeStr} IST
+Consultation fee: ${feeDisplay}
+Booking reference: ${bookingRef}
+Payment status: Awaiting manual verification
+
+The patient's action does not confirm that payment was completed.
+
+Please verify the actual incoming transaction before confirming the appointment.
+
+Open the secure admin dashboard to review this booking:
+${adminUrl}`;
+
+  const htmlContent = `
+    <div style="background-color: #FFF8E1; border: 1.5px solid #FFC107; border-radius: 8px; padding: 16px 20px; margin-bottom: 24px;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <span style="font-size: 18px;">🟡</span>
+        <strong style="color: #B78103; font-size: 15px; text-transform: uppercase; letter-spacing: 0.05em;">Payment Verification Needed</strong>
+      </div>
+      <p style="margin: 0; font-size: 14px; color: #5D4037; line-height: 1.5;">
+        A patient has indicated that they attempted to pay for an online consultation. Please check your UPI app or bank account to determine whether the payment was received.
+      </p>
+    </div>
+
+    <!-- Booking Summary Card -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #FAF7F2; border-radius: 8px; border: 1px solid #E6DED6; margin-bottom: 24px;">
+      <tr>
+        <td style="padding: 12px 18px; border-bottom: 1px solid #E6DED6; font-size: 13px;">
+          <strong style="color: #6E685F; display: block; font-size: 11px; text-transform: uppercase;">Patient Name</strong>
+          <span style="font-size: 15px; font-weight: 700; color: #2D2A26;">${data.patientName}</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 12px 18px; border-bottom: 1px solid #E6DED6; font-size: 13px;">
+          <strong style="color: #6E685F; display: block; font-size: 11px; text-transform: uppercase;">Appointment Date</strong>
+          <span style="font-size: 14px; font-weight: 600; color: #7B2D3E;">${dateStr}</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 12px 18px; border-bottom: 1px solid #E6DED6; font-size: 13px;">
+          <strong style="color: #6E685F; display: block; font-size: 11px; text-transform: uppercase;">Appointment Time</strong>
+          <span style="font-size: 14px; font-weight: 600; color: #2D2A26;">${timeStr} IST</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 12px 18px; border-bottom: 1px solid #E6DED6; font-size: 13px;">
+          <strong style="color: #6E685F; display: block; font-size: 11px; text-transform: uppercase;">Consultation Fee</strong>
+          <span style="font-size: 14px; font-weight: 600; color: #7B2D3E;">${feeDisplay}</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 12px 18px; border-bottom: 1px solid #E6DED6; font-size: 13px;">
+          <strong style="color: #6E685F; display: block; font-size: 11px; text-transform: uppercase;">Booking Reference</strong>
+          <code style="font-family: monospace; font-size: 14px; font-weight: 700; color: #2D2A26;">${bookingRef}</code>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: 12px 18px; font-size: 13px;">
+          <strong style="color: #6E685F; display: block; font-size: 11px; text-transform: uppercase;">Payment Status</strong>
+          <span style="display: inline-block; background-color: #FFF3E0; color: #E65100; font-weight: 700; font-size: 12px; padding: 2px 8px; border-radius: 4px; border: 1px solid #FFE082;">
+            Awaiting manual verification
+          </span>
+        </td>
+      </tr>
+    </table>
+
+    <div style="background-color: #FFFFFF; border-left: 4px solid #7B2D3E; padding: 14px 18px; margin-bottom: 24px; font-size: 13px; color: #4A4640; line-height: 1.6;">
+      <p style="margin: 0 0 6px;">
+        <strong>The patient's action does not confirm that payment was completed.</strong>
+      </p>
+      <p style="margin: 0;">
+        Please verify the actual incoming transaction before confirming the appointment.
+      </p>
+    </div>
+
+    <div style="text-align: center; margin-bottom: 16px;">
+      <a href="${adminUrl}" target="_blank" style="display: inline-block; background-color: #7B2D3E; color: #FFFFFF; text-decoration: none; font-weight: 600; font-size: 14px; padding: 12px 28px; border-radius: 6px; box-shadow: 0 2px 6px rgba(123,45,62,0.2);">
+        Open Secure Admin Dashboard
+      </a>
+      <p style="margin: 8px 0 0; font-size: 11px; color: #8C8479;">
+        Or go to: <a href="${adminUrl}" style="color: #7B2D3E;">${adminUrl}</a>
+      </p>
+    </div>
+  `;
+
+  const html = wrapEmailTemplate(htmlContent);
+
+  if (!resend) {
+    console.log(`[Email Mock] Payment verification reminder sent to ${doctorEmail} for ${bookingRef}`);
+    return { success: true, isMock: true, subject, plainText };
+  }
+
+  try {
+    const res = await resend.emails.send({
+      from: getFromAddress(),
+      to: [doctorEmail],
+      subject,
+      text: plainText,
+      html,
+    });
+    return { success: true, id: res.data?.id };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error("[Email Error] Failed to send payment verification reminder email:", errorMsg);
+    return { success: false, error: errorMsg };
+  }
+}
+

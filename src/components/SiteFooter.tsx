@@ -55,7 +55,7 @@ export default function SiteFooter() {
               {APP_CONFIG.doctor.name}
             </p>
             <p style={{ fontSize: "0.875rem", lineHeight: 1.65, marginBottom: "0.75rem" }}>
-              Senior General Physician &amp; Clinical Sonologist with 21+ years of experience.
+              Senior General Physician &amp; Clinical Sonologist.
               Chief Medical Officer at Gaden Jangtse Hospital, Mundgod, Karnataka.
             </p>
             <p style={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)", marginBottom: "1.25rem" }}>

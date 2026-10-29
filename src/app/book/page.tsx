@@ -6,6 +6,7 @@ import SiteNav from "@/components/SiteNav";
 import SiteFooter from "@/components/SiteFooter";
 import { APP_CONFIG } from "@/lib/config";
 import { cn } from "@/lib/utils";
+import FamilyHeadIcon from "@/components/FamilyHeadIcon";
 
 /* =========================================================
    TYPES
@@ -861,13 +862,10 @@ function StepPatientDetails({
           {/* Dr. Tashi's Family Head & Father Clinical Subsidy */}
           <div
             onClick={() => update("isFamilyHeadDiscount", !data.isFamilyHeadDiscount)}
+            className="booking-subsidy-card"
             style={{
               background: data.isFamilyHeadDiscount ? "rgba(123, 45, 62, 0.05)" : "var(--color-cream)",
               border: `1.5px solid ${data.isFamilyHeadDiscount ? "var(--color-maroon)" : "var(--color-border-soft)"}`,
-              borderRadius: "var(--radius-md)",
-              padding: "1rem 1.125rem",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
             }}
           >
             <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
@@ -886,34 +884,20 @@ function StepPatientDetails({
                 }}
                 onClick={(e) => e.stopPropagation()}
               />
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <label
                   htmlFor="isFamilyHeadDiscount"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                    flexWrap: "wrap",
-                    marginBottom: "0.35rem",
-                    cursor: "pointer",
-                  }}
+                  className="booking-subsidy-header"
+                  style={{ cursor: "pointer" }}
                 >
-                  <span style={{ fontWeight: 600, fontSize: "0.9375rem", color: "var(--color-charcoal)" }}>
-                    👨‍👧‍👦 Booking for a Father or Head of the Family?
+                  <span className="booking-subsidy-icon-badge" aria-hidden="true">
+                    <FamilyHeadIcon size={15} />
                   </span>
-                  <span
-                    style={{
-                      fontSize: "0.7rem",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                      background: "var(--color-maroon)",
-                      color: "#ffffff",
-                      padding: "0.15rem 0.5rem",
-                      borderRadius: "var(--radius-full)",
-                    }}
-                  >
-                    50% Clinical Subsidy · ₹500
+                  <span className="booking-subsidy-title">
+                    Booking for a Father or Head of the Family?
+                  </span>
+                  <span className="booking-subsidy-badge">
+                    50% Subsidy · ₹500
                   </span>
                 </label>
                 <p style={{ fontSize: "0.8125rem", color: "var(--color-charcoal-soft)", lineHeight: 1.5, margin: 0 }}>
@@ -966,6 +950,9 @@ function StepPatientDetails({
 /* =========================================================
    STEP 4: REVIEW & PAY
    ========================================================= */
+/* =========================================================
+   STEP 4: REVIEW & PAY
+   ========================================================= */
 function StepReview({
   slot,
   patient,
@@ -979,6 +966,15 @@ function StepReview({
 }) {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // UPI QR Payment States
+  const [upiPaymentData, setUpiPaymentData] = useState<any>(null);
+  const [submittingPaymentCheck, setSubmittingPaymentCheck] = useState(false);
+  const [paymentCheckNotification, setPaymentCheckNotification] = useState<{
+    message: string;
+    alreadyRequested: boolean;
+  } | null>(null);
+  const [copiedUpi, setCopiedUpi] = useState(false);
 
   const handleProceedToPayment = async () => {
     setSubmitting(true);
@@ -1009,7 +1005,30 @@ function StepReview({
 
       const appointmentId = holdData.appointmentId;
 
-      // 2. Create Razorpay order
+      // 2. Direct verified UPI QR flow
+      if (APP_CONFIG.payment.mode === "upi_qr") {
+        const upiRes = await fetch("/api/payments/upi-qr", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ appointmentId }),
+        });
+
+        const upiData = await upiRes.json();
+        if (!upiRes.ok || !upiData.success) {
+          setErrorMsg(upiData.error || "Failed to generate UPI payment QR code.");
+          return;
+        }
+
+        setUpiPaymentData({
+          ...upiData,
+          appointmentId,
+          bookingToken: holdData.bookingToken,
+          bookingRef: holdData.bookingRef || upiData.bookingRef,
+        });
+        return;
+      }
+
+      // 3. Fallback Razorpay flow
       const orderRes = await fetch("/api/payments/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1022,7 +1041,7 @@ function StepReview({
         return;
       }
 
-      // 3. Handle Development Mock Mode (instant simulation if live keys are not configured yet)
+      // Handle Development Mock Mode
       if (orderData.developmentMock) {
         const verifyRes = await fetch("/api/payments/verify", {
           method: "POST",
@@ -1048,7 +1067,7 @@ function StepReview({
         return;
       }
 
-      // 4. Load official Razorpay Checkout SDK
+      // Load official Razorpay Checkout SDK
       const scriptLoaded = await new Promise<boolean>((resolve) => {
         if (typeof window === "undefined") return resolve(false);
         if ((window as any).Razorpay) return resolve(true);
@@ -1119,10 +1138,41 @@ function StepReview({
       });
 
       rzp.open();
-    } catch (err) {
+    } catch {
       setErrorMsg("Network connection error. Please try again.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleCompletedPayment = async () => {
+    if (!upiPaymentData?.appointmentId || !upiPaymentData?.bookingToken) return;
+    setSubmittingPaymentCheck(true);
+    setErrorMsg(null);
+    try {
+      const res = await fetch("/api/payments/request-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          appointmentId: upiPaymentData.appointmentId,
+          bookingToken: upiPaymentData.bookingToken,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMsg(data.error || "Could not record payment notification. Please try again.");
+        return;
+      }
+
+      setPaymentCheckNotification({
+        message: data.message,
+        alreadyRequested: !!data.alreadyRequested,
+      });
+    } catch {
+      setErrorMsg("Network error connecting to clinic server. Please try again.");
+    } finally {
+      setSubmittingPaymentCheck(false);
     }
   };
 
@@ -1170,6 +1220,340 @@ function StepReview({
       ? [{ label: "Reason", value: patient.reasonForConsultation }]
       : []),
   ];
+
+  // Render UPI QR Payment View if QR code is ready
+  if (upiPaymentData) {
+    return (
+      <div className="card card-padded" style={{ marginBottom: "1.25rem" }} id="upi-payment-panel">
+        <button
+          onClick={() => {
+            setUpiPaymentData(null);
+            setErrorMsg(null);
+            setPaymentCheckNotification(null);
+          }}
+          className="btn btn-ghost btn-sm"
+          style={{ marginBottom: "1.25rem", padding: "0.375rem 0", gap: "0.375rem" }}
+          aria-label="Back to appointment review"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Back to Details
+        </button>
+
+        <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              background: "rgba(123,45,62,0.08)",
+              color: "var(--color-maroon)",
+              padding: "0.35rem 0.85rem",
+              borderRadius: "999px",
+              fontSize: "0.8125rem",
+              fontWeight: 600,
+              marginBottom: "0.5rem",
+            }}
+          >
+            <span>Payment Method: Official UPI QR</span>
+          </div>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", color: "var(--color-charcoal)", margin: "0 0 0.35rem" }}>
+            Scan QR to Authorize Payment
+          </h2>
+          <p style={{ fontSize: "0.875rem", color: "var(--color-charcoal-soft)", maxWidth: "520px", margin: "0 auto" }}>
+            Scan with any UPI app (Google Pay, PhonePe, Paytm, BHIM, or Mobile Banking) to complete your consultation fee.
+          </p>
+        </div>
+
+        {/* QR Code & Recipient Info Container */}
+        <div
+          style={{
+            background: "var(--color-cream)",
+            border: "1.5px solid var(--color-border-soft)",
+            borderRadius: "var(--radius-lg)",
+            padding: "1.5rem",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "1.25rem",
+            marginBottom: "1.5rem",
+          }}
+        >
+          {/* Appointment & Doctor Summary Box */}
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "420px",
+              padding: "0.85rem 1rem",
+              background: "#FFFFFF",
+              border: "1px solid var(--color-border-soft)",
+              borderRadius: "var(--radius-md)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.4rem",
+              fontSize: "0.85rem",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ color: "var(--color-charcoal-muted)", fontSize: "0.8rem" }}>Doctor</span>
+              <strong style={{ color: "var(--color-charcoal)" }}>Dr. Dhondup Tashi</strong>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.35rem", borderTop: "1px dashed var(--color-border-soft)" }}>
+              <span style={{ color: "var(--color-charcoal-muted)", fontSize: "0.8rem" }}>Appointment</span>
+              <strong style={{ color: "var(--color-maroon)" }}>{displayDate} at {slot.slotLabel} IST</strong>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.35rem", borderTop: "1px dashed var(--color-border-soft)" }}>
+              <span style={{ color: "var(--color-charcoal-muted)", fontSize: "0.8rem" }}>Consultation Fee</span>
+              <strong style={{ color: "var(--color-maroon)", fontSize: "1.1rem" }}>
+                {upiPaymentData.amountFormatted || `₹${upiPaymentData.amount}`}
+              </strong>
+            </div>
+          </div>
+
+          {/* QR Code Image */}
+          <div
+            style={{
+              background: "#FFFFFF",
+              padding: "1rem",
+              borderRadius: "var(--radius-md)",
+              border: "1.5px solid var(--color-border-soft)",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={upiPaymentData.qrCodeDataUrl}
+              alt="UPI Payment QR Code"
+              width={240}
+              height={240}
+              style={{ display: "block", maxWidth: "100%", height: "auto" }}
+            />
+            <span style={{ fontSize: "0.75rem", color: "var(--color-charcoal-muted)", marginTop: "0.5rem" }}>
+              Scan with any UPI App
+            </span>
+          </div>
+
+          {/* Verified Recipient Box */}
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "420px",
+              background: "#FFFFFF",
+              border: "1px solid var(--color-border-soft)",
+              borderRadius: "var(--radius-md)",
+              padding: "1rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.5rem",
+              fontSize: "0.875rem",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ color: "var(--color-charcoal-muted)", fontSize: "0.8125rem" }}>Verified Recipient</span>
+              <span style={{ fontWeight: 600, color: "var(--color-charcoal)", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#2E7D32" aria-hidden="true">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                {upiPaymentData.recipientName}
+              </span>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.35rem", borderTop: "1px dashed var(--color-border-soft)" }}>
+              <span style={{ color: "var(--color-charcoal-muted)", fontSize: "0.8125rem" }}>UPI ID (VPA)</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <code style={{ fontFamily: "monospace", fontWeight: 600, color: "var(--color-maroon)", fontSize: "0.875rem" }}>
+                  {upiPaymentData.vpa}
+                </code>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(upiPaymentData.vpa);
+                    setCopiedUpi(true);
+                    setTimeout(() => setCopiedUpi(false), 2000);
+                  }}
+                  className="btn btn-ghost btn-sm"
+                  style={{ padding: "0.2rem 0.5rem", fontSize: "0.75rem" }}
+                  aria-label="Copy UPI ID"
+                >
+                  {copiedUpi ? "Copied! ✓" : "Copy"}
+                </button>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.35rem", borderTop: "1px dashed var(--color-border-soft)" }}>
+              <span style={{ color: "var(--color-charcoal-muted)", fontSize: "0.8125rem" }}>Booking Reference</span>
+              <span style={{ fontFamily: "monospace", fontWeight: 600, color: "var(--color-charcoal)", fontSize: "0.8125rem" }}>
+                {upiPaymentData.bookingRef || upiPaymentData.appointmentId?.slice(0, 8).toUpperCase()}
+              </span>
+            </div>
+          </div>
+
+          {/* Deep link button for mobile devices */}
+          {upiPaymentData.upiUri && (
+            <a
+              href={upiPaymentData.upiUri}
+              className="btn btn-secondary btn-sm"
+              style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+              Open in UPI App (Mobile Device)
+            </a>
+          )}
+
+          {/* Verification Notice / Safety Alert */}
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "420px",
+              background: "#FFF8E1",
+              border: "1px solid #FFE082",
+              borderRadius: "var(--radius-md)",
+              padding: "0.75rem 1rem",
+              fontSize: "0.8125rem",
+              color: "#8D6E63",
+              lineHeight: 1.5,
+              display: "flex",
+              gap: "0.5rem",
+              alignItems: "flex-start",
+            }}
+          >
+            <span style={{ fontSize: "1rem", lineHeight: 1 }}>⚠️</span>
+            <div>
+              <strong style={{ color: "#5D4037" }}>Important Patient Notice:</strong> Please confirm in your UPI app that the recipient name appears as <strong>{upiPaymentData.recipientName}</strong> and the amount is exactly <strong>{upiPaymentData.amountFormatted || `₹${upiPaymentData.amount}`}</strong> before authorizing payment.
+            </div>
+          </div>
+        </div>
+
+        {/* Patient Action: "I've completed the payment" */}
+        <div
+          style={{
+            background: "#FFFFFF",
+            border: "1.5px solid var(--color-border-soft)",
+            borderRadius: "var(--radius-md)",
+            padding: "1.25rem",
+            marginBottom: "1.25rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+            <span
+              style={{
+                background: "var(--color-maroon)",
+                color: "#FFFFFF",
+                width: "22px",
+                height: "22px",
+                borderRadius: "50%",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+              }}
+            >
+              2
+            </span>
+            <h3 style={{ fontSize: "0.95rem", fontWeight: 700, margin: 0, color: "var(--color-charcoal)" }}>
+              Step 2: Confirm Your Payment Attempt
+            </h3>
+          </div>
+          <p style={{ fontSize: "0.8125rem", color: "var(--color-charcoal-soft)", margin: "0 0 1rem" }}>
+            Once you have authorized the consultation fee in your UPI app, tap below to notify Dr. Dhondup Tashi to check for your incoming payment.
+          </p>
+
+          <button
+            type="button"
+            onClick={handleCompletedPayment}
+            disabled={submittingPaymentCheck}
+            className="btn btn-primary btn-lg"
+            id="completed-payment-btn"
+            style={{
+              width: "100%",
+              justifyContent: "center",
+              padding: "0.9rem 1.25rem",
+              fontSize: "1rem",
+              fontWeight: 600,
+            }}
+          >
+            {submittingPaymentCheck ? (
+              "Notifying doctor..."
+            ) : (
+              "I've completed the payment"
+            )}
+          </button>
+
+          {paymentCheckNotification && (
+            <div
+              style={{
+                marginTop: "1rem",
+                background: paymentCheckNotification.alreadyRequested
+                  ? "#FFF8E1"
+                  : "#E8F5E9",
+                border: `1.5px solid ${
+                  paymentCheckNotification.alreadyRequested
+                    ? "#FFE082"
+                    : "#A5D6A7"
+                }`,
+                borderRadius: "var(--radius-sm)",
+                padding: "0.85rem 1rem",
+                display: "flex",
+                gap: "0.75rem",
+                alignItems: "flex-start",
+              }}
+              role="status"
+              aria-live="polite"
+              id="payment-notification-banner"
+            >
+              <span style={{ fontSize: "1.25rem", lineHeight: 1 }}>
+                {paymentCheckNotification.alreadyRequested ? "ℹ️" : "✓"}
+              </span>
+              <div style={{ flex: 1 }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "0.875rem",
+                    fontWeight: 600,
+                    color: paymentCheckNotification.alreadyRequested
+                      ? "#8D6E63"
+                      : "#2E7D32",
+                    lineHeight: 1.45,
+                  }}
+                >
+                  {paymentCheckNotification.message}
+                </p>
+                <div style={{ marginTop: "0.65rem" }}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onConfirmed({
+                        id: upiPaymentData.appointmentId,
+                        bookingRef: upiPaymentData.bookingRef,
+                        isManualUpi: true,
+                        consultation_fee: upiPaymentData.amount,
+                      })
+                    }
+                    className="btn btn-secondary btn-sm"
+                    style={{ fontSize: "0.75rem", padding: "0.35rem 0.75rem" }}
+                  >
+                    View Reservation Status →
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <p style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--color-charcoal-muted)", margin: 0 }}>
+          🔒 Privacy guarantee: No medical conditions, phone numbers, or diagnosis details are shared in UPI payment strings.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -1267,7 +1651,7 @@ function StepReview({
             {APP_CONFIG.rescheduleWindowHours} hours before the original appointment.
           </li>
           <li>
-            <strong>Confirmation:</strong> Your slot is confirmed only after payment is verified.
+            <strong>Confirmation:</strong> Your slot is confirmed only after payment is verified by our administrator.
           </li>
           <li>
             <strong>Reminder:</strong> An email reminder will be sent approximately 24 hours before your appointment.
@@ -1303,7 +1687,7 @@ function StepReview({
           }}
           role="alert"
         >
-          <strong>Reservation conflict:</strong>
+          <strong>Notice:</strong>
           <span>{errorMsg}</span>
           <button
             onClick={onBack}
@@ -1323,7 +1707,9 @@ function StepReview({
         id="pay-btn"
       >
         {submitting
-          ? "Processing payment..."
+          ? "Generating payment request..."
+          : APP_CONFIG.payment.mode === "upi_qr"
+          ? `Proceed to Pay via UPI QR — ${patient.isFamilyHeadDiscount ? APP_CONFIG.familyHeadSubsidy.feeDisplay : APP_CONFIG.consultationFeeDisplay}`
           : `Proceed to Payment — ${patient.isFamilyHeadDiscount ? APP_CONFIG.familyHeadSubsidy.feeDisplay : APP_CONFIG.consultationFeeDisplay}`}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -1345,7 +1731,9 @@ function StepReview({
           <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
           <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
         </svg>
-        Secure payment via Razorpay · Instant confirmation with Google Meet link
+        {APP_CONFIG.payment.mode === "upi_qr"
+          ? "Official UPI QR Code · Clinic Administrator Verification"
+          : "Secure payment via Razorpay · Instant confirmation with Google Meet link"}
       </p>
     </div>
   );
@@ -1394,6 +1782,307 @@ function StepConfirmed({
     `Please be ready 5 minutes before scheduled time with any previous reports or prescriptions.`
   );
   const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${gcalTitle}&dates=${gcalDates}&details=${gcalDetails}&location=${encodeURIComponent(meetLink)}`;
+
+  // If submitted via manual UPI verification
+  if (appointment.isManualUpi) {
+    return (
+      <div className="card card-padded" style={{ textAlign: "left" }} id="booking-confirmation-card">
+        {/* Verification Pending Badge */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "1rem",
+            paddingBottom: "1.5rem",
+            borderBottom: "1px solid var(--color-border-soft)",
+            marginBottom: "1.5rem",
+          }}
+        >
+          <div
+            style={{
+              width: "56px",
+              height: "56px",
+              borderRadius: "50%",
+              background: "#FFF8E1",
+              border: "2px solid #FFC107",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              color: "#F57F17",
+            }}
+          >
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+          <div>
+            <span
+              style={{
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                color: "#E65100",
+              }}
+            >
+              Manual Verification Pending
+            </span>
+            <h2
+              style={{
+                fontFamily: "var(--font-serif)",
+                fontSize: "1.6rem",
+                color: "var(--color-charcoal)",
+                margin: 0,
+              }}
+            >
+              Consultation Request Received
+            </h2>
+          </div>
+        </div>
+
+        {/* Booking & UTR Reference Card */}
+        <div
+          style={{
+            background: "var(--color-cream)",
+            borderRadius: "var(--radius-md)",
+            padding: "1rem 1.25rem",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gap: "1rem",
+            marginBottom: "1.5rem",
+            border: "1px solid var(--color-border-soft)",
+          }}
+        >
+          <div>
+            <span style={{ fontSize: "0.75rem", color: "var(--color-charcoal-muted)", textTransform: "uppercase", letterSpacing: "0.05em", display: "block" }}>
+              Booking Reference
+            </span>
+            <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: "0.95rem", color: "var(--color-charcoal)" }}>
+              {appointment.bookingRef || `DT-${appointment.id?.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase()}`}
+            </span>
+          </div>
+
+          <div>
+            <span style={{ fontSize: "0.75rem", color: "var(--color-charcoal-muted)", textTransform: "uppercase", letterSpacing: "0.05em", display: "block" }}>
+              Payment Status
+            </span>
+            <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "#E65100" }}>
+              Awaiting Manual Verification
+            </span>
+          </div>
+
+          <div>
+            <span style={{ fontSize: "0.75rem", color: "var(--color-charcoal-muted)", textTransform: "uppercase", letterSpacing: "0.05em", display: "block" }}>
+              Amount Submitted
+            </span>
+            <span
+              style={{
+                display: "inline-block",
+                background: "#FFF3E0",
+                color: "#E65100",
+                fontWeight: 700,
+                fontSize: "0.85rem",
+                padding: "0.2rem 0.6rem",
+                borderRadius: "999px",
+                marginTop: "0.2rem",
+              }}
+            >
+              {patient.isFamilyHeadDiscount ? "₹500 (Subsidized)" : "₹1,000"} · Pending Verification
+            </span>
+          </div>
+        </div>
+
+        {/* Verification Next Steps Card */}
+        <div
+          style={{
+            background: "var(--color-ivory)",
+            border: "1.5px solid var(--color-gold)",
+            borderRadius: "var(--radius-lg)",
+            padding: "1.5rem",
+            marginBottom: "1.75rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
+            <div
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "8px",
+                background: "rgba(196,127,58,0.15)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--color-maroon)",
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+            </div>
+            <div>
+              <h3 style={{ fontSize: "1.05rem", margin: 0, color: "var(--color-charcoal)", fontFamily: "var(--font-sans)", fontWeight: 600 }}>
+                What happens next?
+              </h3>
+              <p style={{ margin: 0, fontSize: "0.8125rem", color: "var(--color-charcoal-soft)" }}>
+                Administrator verification in accordance with clinic safety protocol
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", fontSize: "0.875rem", color: "var(--color-charcoal)", lineHeight: 1.6 }}>
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
+              <span style={{ background: "var(--color-maroon)", color: "#FFFFFF", width: "22px", height: "22px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: 700, flexShrink: 0 }}>
+                1
+              </span>
+              <div>
+                <strong>Administrator Bank Verification:</strong> Our administrative team will verify your transfer credit against Dr. Dhondup Tashi&apos;s ICICI bank statement.
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
+              <span style={{ background: "var(--color-maroon)", color: "#FFFFFF", width: "22px", height: "22px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: 700, flexShrink: 0 }}>
+                2
+              </span>
+              <div>
+                <strong>Google Meet Link via Email:</strong> Once confirmed, your official appointment confirmation with private Google Meet consultation link will be dispatched immediately to <strong>{patient.emailAddress}</strong>.
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
+              <span style={{ background: "var(--color-maroon)", color: "#FFFFFF", width: "22px", height: "22px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: 700, flexShrink: 0 }}>
+                3
+              </span>
+              <div>
+                <strong>Verification Timeline:</strong> Verifications are typically handled within 15 to 30 minutes during standard clinic hours (9:00 AM – 7:00 PM IST).
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Appointment Details Summary */}
+        <h3
+          style={{
+            fontSize: "0.875rem",
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+            color: "var(--color-charcoal-soft)",
+            marginBottom: "0.75rem",
+          }}
+        >
+          Appointment Summary
+        </h3>
+
+        <dl
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gap: "1rem",
+            background: "var(--color-cream)",
+            padding: "1.25rem",
+            borderRadius: "var(--radius-md)",
+            border: "1px solid var(--color-border-soft)",
+            marginBottom: "1.75rem",
+          }}
+        >
+          <div>
+            <dt style={{ fontSize: "0.75rem", color: "var(--color-charcoal-muted)" }}>Requested Date & Time</dt>
+            <dd style={{ fontSize: "0.9375rem", fontWeight: 600, color: "var(--color-charcoal)", margin: "0.25rem 0 0" }}>
+              {displayDate}
+            </dd>
+            <dd style={{ fontSize: "0.8125rem", color: "var(--color-maroon)", margin: "0.125rem 0 0", fontWeight: 500 }}>
+              {slot.slotLabel} IST (20 minutes)
+            </dd>
+          </div>
+
+          <div>
+            <dt style={{ fontSize: "0.75rem", color: "var(--color-charcoal-muted)" }}>Patient</dt>
+            <dd style={{ fontSize: "0.9375rem", fontWeight: 600, color: "var(--color-charcoal)", margin: "0.25rem 0 0" }}>
+              {patient.fullName} (Age: {patient.age})
+            </dd>
+            <dd style={{ fontSize: "0.8125rem", color: "var(--color-charcoal-soft)", margin: "0.125rem 0 0" }}>
+              {patient.emailAddress} · {patient.mobileNumber}
+            </dd>
+          </div>
+
+          <div>
+            <dt style={{ fontSize: "0.75rem", color: "var(--color-charcoal-muted)" }}>Attending Physician</dt>
+            <dd style={{ fontSize: "0.9375rem", fontWeight: 600, color: "var(--color-charcoal)", margin: "0.25rem 0 0" }}>
+              {APP_CONFIG.doctor.name}
+            </dd>
+            <dd style={{ fontSize: "0.8125rem", color: "var(--color-charcoal-soft)", margin: "0.125rem 0 0" }}>
+              {APP_CONFIG.doctor.title}
+            </dd>
+          </div>
+
+          <div>
+            <dt style={{ fontSize: "0.75rem", color: "var(--color-charcoal-muted)" }}>Verification Status</dt>
+            <dd style={{ fontSize: "0.875rem", fontWeight: 600, color: "#E65100", margin: "0.25rem 0 0" }}>
+              Pending Bank Check
+            </dd>
+            <dd style={{ fontSize: "0.8125rem", color: "var(--color-charcoal-soft)", margin: "0.125rem 0 0", fontFamily: "monospace" }}>
+              Ref: {appointment.utrNumber}
+            </dd>
+          </div>
+        </dl>
+
+        {/* Preparation guidelines */}
+        <div
+          style={{
+            background: "var(--color-ivory)",
+            border: "1px solid var(--color-border-soft)",
+            borderRadius: "var(--radius-md)",
+            padding: "1.25rem",
+            marginBottom: "1.75rem",
+            lineHeight: 1.6,
+            fontSize: "0.8125rem",
+            color: "var(--color-charcoal-soft)",
+          }}
+        >
+          <h4 style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--color-charcoal)", margin: "0 0 0.5rem" }}>
+            How to prepare for your consultation:
+          </h4>
+          <ul style={{ paddingLeft: "1.25rem", display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+            <li>
+              Keep your phone or email inbox open to receive the confirmed Google Meet link once verified.
+            </li>
+            <li>
+              Gather previous medical records, prescription slips, or laboratory reports relevant to your visit.
+            </li>
+            <li>
+              Ensure you are in a private, quiet space with adequate lighting and stable internet access for the video call.
+            </li>
+          </ul>
+        </div>
+
+        {/* Action Footer */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", justifyContent: "space-between", alignItems: "center" }}>
+          <button
+            onClick={() => window.print()}
+            className="btn btn-secondary btn-sm"
+            style={{ gap: "0.375rem" }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="6 9 6 2 18 2 18 9"/>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+              <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+            Print / Save Receipt
+          </button>
+
+          <Link href="/" className="btn btn-ghost btn-sm">
+            Return to Home Page →
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="card card-padded" style={{ textAlign: "left" }} id="booking-confirmation-card">

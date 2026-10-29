@@ -16,6 +16,7 @@ interface CalendarEventParams {
 interface CalendarEventResult {
   eventId: string | null;
   meetLink: string;
+  calendarUrl?: string | null;
   isMock: boolean;
 }
 
@@ -66,7 +67,8 @@ function getSlotTimestamps(date: string, slotTime: string) {
 
 /**
  * Creates an event in Google Calendar with a real Google Meet video conference link.
- * Falls back to a deterministic Google Meet link if credentials are not configured.
+ * Automatically invites Dr. Dhondup Tashi (dhontash@gmail.com) and the patient,
+ * updating both calendars via Google Calendar notifications.
  */
 export async function createGoogleCalendarEvent(
   params: CalendarEventParams
@@ -80,6 +82,7 @@ export async function createGoogleCalendarEvent(
     return {
       eventId: null,
       meetLink: fallbackMeetLink,
+      calendarUrl: null,
       isMock: true,
     };
   }
@@ -88,6 +91,10 @@ export async function createGoogleCalendarEvent(
     const auth = getOAuthClient();
     const calendar = google.calendar({ version: "v3", auth });
     const calendarId = process.env.GOOGLE_CALENDAR_ID || "primary";
+    const doctorEmail =
+      process.env.DOCTOR_EMAIL ||
+      process.env.DOCTOR_NOTIFICATION_EMAIL ||
+      "dhontash@gmail.com";
 
     const { startDateTime, endDateTime } = getSlotTimestamps(params.date, params.slotTime);
 
@@ -105,14 +112,41 @@ export async function createGoogleCalendarEvent(
       `----------------------------------------`,
       `Booking ID: ${params.appointmentId}`,
       `Consultation Duration: ${APP_CONFIG.appointmentDurationMinutes} minutes`,
+      `Doctor Account: ${doctorEmail}`,
       `Patient Instructions: Please join 5 minutes early with any recent lab reports or medical history.`,
     ]
       .filter(Boolean)
       .join("\n");
 
+    // Construct attendee list ensuring Dr. Dhondup (dhontash@gmail.com) has direct calendar & Meet access
+    const attendees: Array<{ email: string; displayName?: string }> = [
+      {
+        email: doctorEmail,
+        displayName: `${APP_CONFIG.doctor.name} (Physician)`,
+      },
+    ];
+
+    if (params.patientEmail) {
+      attendees.push({
+        email: params.patientEmail,
+        displayName: params.patientName,
+      });
+    }
+
+    if (
+      process.env.ADMIN_NOTIFICATION_EMAIL &&
+      process.env.ADMIN_NOTIFICATION_EMAIL.toLowerCase() !== doctorEmail.toLowerCase()
+    ) {
+      attendees.push({
+        email: process.env.ADMIN_NOTIFICATION_EMAIL,
+        displayName: "Consultation Admin",
+      });
+    }
+
     const res = await calendar.events.insert({
       calendarId,
       conferenceDataVersion: 1,
+      sendUpdates: "all", // Dispatches calendar invite directly to dhontash@gmail.com and adds to their Google Calendar
       requestBody: {
         summary: `Online Consultation: ${params.patientName} — Dr. Dhondup Tashi`,
         description,
@@ -124,12 +158,7 @@ export async function createGoogleCalendarEvent(
           dateTime: endDateTime,
           timeZone: "Asia/Kolkata",
         },
-        attendees: [
-          { email: params.patientEmail, displayName: params.patientName },
-          ...(process.env.ADMIN_NOTIFICATION_EMAIL
-            ? [{ email: process.env.ADMIN_NOTIFICATION_EMAIL, displayName: APP_CONFIG.doctor.name }]
-            : []),
-        ],
+        attendees,
         conferenceData: {
           createRequest: {
             requestId: params.appointmentId,
@@ -157,6 +186,7 @@ export async function createGoogleCalendarEvent(
     return {
       eventId: event.id || null,
       meetLink: liveMeetLink,
+      calendarUrl: event.htmlLink || null,
       isMock: false,
     };
   } catch (err) {
@@ -165,6 +195,7 @@ export async function createGoogleCalendarEvent(
     return {
       eventId: null,
       meetLink: fallbackMeetLink,
+      calendarUrl: null,
       isMock: true,
     };
   }
@@ -184,6 +215,7 @@ export async function deleteGoogleCalendarEvent(eventId: string): Promise<boolea
     await calendar.events.delete({
       calendarId,
       eventId,
+      sendUpdates: "all",
     });
     return true;
   } catch (err) {
@@ -212,6 +244,7 @@ export async function updateGoogleCalendarEventTime(
     await calendar.events.patch({
       calendarId,
       eventId,
+      sendUpdates: "all",
       requestBody: {
         start: {
           dateTime: startDateTime,
