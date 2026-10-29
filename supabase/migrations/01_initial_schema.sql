@@ -196,6 +196,7 @@ ALTER TABLE consultation_notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE appointment_reschedules ENABLE ROW LEVEL SECURITY;
 
 -- Schedule overrides: Public can read to see unavailable dates
+DROP POLICY IF EXISTS "Public can view schedule overrides" ON schedule_overrides;
 CREATE POLICY "Public can view schedule overrides"
     ON schedule_overrides
     FOR SELECT
