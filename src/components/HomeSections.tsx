@@ -25,6 +25,70 @@ export function HeroSection() {
         >
           {/* Left: text content */}
           <div>
+            {/* Mobile-only compact doctor card (avatar + Instagram) */}
+            <div className="hero-mobile-card">
+              <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
+                {/* Circular avatar */}
+                <div style={{
+                  width: "64px",
+                  height: "64px",
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  flexShrink: 0,
+                  border: "2px solid rgba(123,45,62,0.2)",
+                  boxShadow: "0 4px 12px rgba(123,45,62,0.15)",
+                }}>
+                  <Image
+                    src="/images/HomePagePicture.jpeg"
+                    alt="Dr. Dhondup Tashi"
+                    width={64}
+                    height={64}
+                    style={{ objectFit: "cover", objectPosition: "center top", width: "100%", height: "100%" }}
+                  />
+                </div>
+                {/* Name + role */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: "1rem", color: "var(--color-maroon)", margin: 0 }}>
+                    Dr. Dhun Tash
+                  </p>
+                  <p style={{ fontSize: "0.72rem", color: "var(--color-charcoal-soft)", margin: "0.1rem 0 0", lineHeight: 1.4 }}>
+                    Senior Consultant Family Physician
+                  </p>
+                </div>
+                {/* Instagram pill */}
+                <a
+                  href="https://www.instagram.com/dr_dhun_tashi/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.3rem",
+                    textDecoration: "none",
+                    background: "linear-gradient(135deg, #fdf0f8, #fff5f0)",
+                    border: "1px solid rgba(188,24,136,0.2)",
+                    borderRadius: "var(--radius-full)",
+                    padding: "0.3rem 0.6rem",
+                    flexShrink: 0,
+                  }}
+                  aria-label="Follow on Instagram"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="ig-mob-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#f09433" />
+                        <stop offset="50%" stopColor="#dc2743" />
+                        <stop offset="100%" stopColor="#bc1888" />
+                      </linearGradient>
+                    </defs>
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" stroke="url(#ig-mob-grad)" strokeWidth="1.75" />
+                    <circle cx="12" cy="12" r="4.5" stroke="url(#ig-mob-grad)" strokeWidth="1.75" />
+                    <circle cx="17.5" cy="6.5" r="1.2" fill="url(#ig-mob-grad)" />
+                  </svg>
+                  <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "#bc1888" }}>Follow</span>
+                </a>
+              </div>
+            </div>
             {/* Eyebrow */}
             <div
               style={{
@@ -53,7 +117,7 @@ export function HeroSection() {
                   color: "var(--color-saffron)",
                 }}
               >
-                Award winning general practitioner 21+ years of experience
+                Award winning physician 21+ years of experience
               </span>
             </div>
 
@@ -76,7 +140,7 @@ export function HeroSection() {
                 marginBottom: "0.85rem",
               }}
             >
-              General Physician &middot; Clinical Sonologist &middot; Chief Medical Officer &middot; Community Health Advocate
+              Family Physician &middot; Clinical Sonologist &middot; Chief Medical Officer &middot; Community Health Advocate
             </p>
 
             {/* About the Doctor button just above third box */}
@@ -103,14 +167,18 @@ export function HeroSection() {
               style={{
                 fontFamily: "var(--font-serif)",
                 fontSize: "clamp(1.05rem, 1.8vw, 1.25rem)",
-                color: "var(--color-charcoal)",
+                color: "var(--color-maroon)",
                 marginBottom: "1.75rem",
                 fontStyle: "italic",
-                fontWeight: 400,
+                fontWeight: 600,
                 lineHeight: 1.5,
+                background: "var(--color-saffron-pale)",
+                border: "1.5px solid rgba(196,127,58,0.35)",
+                borderRadius: "var(--radius-md)",
+                padding: "0.6rem 1rem",
               }}
             >
-              Dedicated online consulation for Ladakhi, Tibetan, Lahaut-Spiti and Monpa communities.
+              Dedicated online consultation for Tibetan, Ladakhi, Lahaul-Spiti and Monpa communities.
             </p>
 
             {/* Fee + duration badges */}
@@ -170,7 +238,7 @@ export function HeroSection() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
-              Secure Razorpay Checkout &middot; Instant Google Meet Link &middot; Resend Confirmation
+              Secure Payment &middot; Instant Google Meet Link &middot; Email Confirmation
             </p>
           </div>
 
@@ -197,7 +265,7 @@ export function HeroSection() {
             >
               <Image
                 src="/images/HomePagePicture.jpeg"
-                alt="Dr. Dhondup Tashi — Senior General Physician & Clinical Sonologist"
+                alt="Dr. Dhondup Tashi — Family Physician & Clinical Sonologist"
                 fill
                 sizes="(max-width: 768px) 100vw, 420px"
                 style={{ objectFit: "cover", objectPosition: "center top" }}
@@ -231,20 +299,38 @@ export function HeroSection() {
                     Chief Medical Officer &middot; Gaden Jangtse Hospital
                   </p>
                 </div>
-                <div
+                <a
+                  href="https://www.instagram.com/dr_dhun_tashi/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   style={{
-                    background: "var(--color-maroon-muted)",
-                    color: "var(--color-maroon)",
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                    padding: "0.25rem 0.5rem",
-                    borderRadius: "var(--radius-sm)",
-                    textAlign: "right",
-                    whiteSpace: "nowrap",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "0.2rem",
+                    textDecoration: "none",
+                    flexShrink: 0,
                   }}
+                  aria-label="Follow Dr. Dhun Tash on Instagram"
                 >
-                  Clinical Sonologist
-                </div>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="ig-hero-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#f09433" />
+                        <stop offset="25%" stopColor="#e6683c" />
+                        <stop offset="50%" stopColor="#dc2743" />
+                        <stop offset="75%" stopColor="#cc2366" />
+                        <stop offset="100%" stopColor="#bc1888" />
+                      </linearGradient>
+                    </defs>
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" stroke="url(#ig-hero-grad)" strokeWidth="1.75" />
+                    <circle cx="12" cy="12" r="4.5" stroke="url(#ig-hero-grad)" strokeWidth="1.75" />
+                    <circle cx="17.5" cy="6.5" r="1.2" fill="url(#ig-hero-grad)" />
+                  </svg>
+                  <span style={{ fontSize: "0.65rem", fontWeight: 600, color: "#bc1888", whiteSpace: "nowrap" }}>
+                    @dr_dhun_tashi
+                  </span>
+                </a>
               </div>
             </div>
           </div>
@@ -678,7 +764,7 @@ export function AboutSection() {
               margin: 0,
             }}
           >
-            General Physician &middot; Clinical Sonologist &middot; Chief Medical Officer &middot; Community Health Advocate
+            Family Physician &middot; Clinical Sonologist &middot; Chief Medical Officer &middot; Community Health Advocate
           </p>
           <div className="divider-ornament" aria-hidden="true" style={{ marginBlock: "1.25rem", justifyContent: "center" }}>
             <div className="divider-ornament-inner" />
@@ -761,7 +847,7 @@ export function AboutSection() {
                   lineHeight: 1.4,
                 }}
               >
-                General Physician &middot; Clinical Sonologist &middot; Chief Medical Officer &middot; Community Health Advocate
+                Family Physician &middot; Clinical Sonologist &middot; Chief Medical Officer &middot; Community Health Advocate
               </p>
 
               <div className="divider-ornament" aria-hidden="true">
@@ -771,7 +857,7 @@ export function AboutSection() {
 
             <div style={{ display: "flex", flexDirection: "column", gap: "1.125rem", fontSize: "0.95rem", lineHeight: 1.65, color: "var(--color-charcoal)" }}>
               <p>
-                <strong>Dr. Dhondup Tashi</strong> is a senior General Physician with <strong>more than 21 years of clinical experience</strong>. He serves as <strong>Chief Medical Officer at Gaden Jangtse Hospital</strong>, a charitable community hospital in Mundgod, Karnataka, India. Since 2015, he has also served as the Health Chair of RDTS and as an advisor to the Health Advisory Committee of the Department of Health, Central Tibetan Administration, Dharamsala.
+                <strong>Dr. Dhondup Tashi</strong> is a <strong>Senior Consultant Family Physician</strong> with <strong>more than 21 years of clinical experience</strong>. He serves as <strong>Chief Medical Officer at Gaden Jangtse Hospital</strong>, a charitable community hospital in Mundgod, Karnataka, India. Since 2015, he is serving as the <strong>Health Chair of RDTS</strong> and recently appointed as <strong>advisor to the Health Advisory Committee of the Department of Health, Central Tibetan Administration (CTA), Dharamsala</strong>.
               </p>
 
               <p>
@@ -839,6 +925,72 @@ export function AboutSection() {
               <Link href="/book" className="btn btn-primary btn-md about-cta-btn">
                 Schedule a Consultation with Dr. Tashi
               </Link>
+            </div>
+
+            {/* Instagram CTA */}
+            <div
+              style={{
+                marginTop: "1.5rem",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                background: "linear-gradient(135deg, #fdf6ef 0%, #fef3f0 100%)",
+                border: "1px solid rgba(196,127,58,0.25)",
+                borderRadius: "var(--radius-md)",
+                padding: "0.85rem 1.1rem",
+              }}
+            >
+              {/* Instagram gradient icon */}
+              <svg
+                width="26"
+                height="26"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+                style={{ flexShrink: 0 }}
+              >
+                <defs>
+                  <linearGradient id="ig-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#f09433" />
+                    <stop offset="25%" stopColor="#e6683c" />
+                    <stop offset="50%" stopColor="#dc2743" />
+                    <stop offset="75%" stopColor="#cc2366" />
+                    <stop offset="100%" stopColor="#bc1888" />
+                  </linearGradient>
+                </defs>
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" stroke="url(#ig-grad)" strokeWidth="1.75" />
+                <circle cx="12" cy="12" r="4.5" stroke="url(#ig-grad)" strokeWidth="1.75" />
+                <circle cx="17.5" cy="6.5" r="1.2" fill="url(#ig-grad)" />
+              </svg>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: "0.8rem", color: "var(--color-charcoal-muted)", margin: "0 0 0.15rem" }}>
+                  Follow for health tips &amp; community updates
+                </p>
+                <a
+                  href="https://www.instagram.com/dr_dhun_tashi/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    fontSize: "0.9rem",
+                    fontWeight: 600,
+                    color: "var(--color-maroon)",
+                    textDecoration: "none",
+                    letterSpacing: "0.01em",
+                  }}
+                >
+                  @dr_dhun_tashi
+                </a>
+              </div>
+              <a
+                href="https://www.instagram.com/dr_dhun_tashi/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-secondary btn-sm"
+                style={{ flexShrink: 0, fontSize: "0.8rem", padding: "0.35rem 0.8rem" }}
+                aria-label="Follow Dr. Dhun Tash on Instagram"
+              >
+                Follow →
+              </a>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -451,10 +451,10 @@ export default function StandardCheckoutPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setAmountInRupees(850)}
+                      onClick={() => setAmountInRupees(650)}
                       className="btn btn-secondary btn-sm"
                     >
-                      ₹850 (Standard)
+                      ₹650 (Standard)
                     </button>
                   </div>
                   <span style={{ fontSize: "0.75rem", color: "var(--color-charcoal-muted)", marginTop: "0.25rem", display: "block" }}>

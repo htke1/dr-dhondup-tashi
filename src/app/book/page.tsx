@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useCallback, useEffect, useRef, Fragment } from "react";
 import Link from "next/link";
@@ -32,7 +32,7 @@ function formatPatientLanguage(lang: string): string {
     case "ladakhi":
       return "Ladakhi";
     case "lahual_spiti":
-      return "Lahual-Spiti";
+      return "Lahaul-Spiti";
     default:
       return lang || "English";
   }
@@ -978,15 +978,15 @@ function StepPatientDetails({
               <option value="tibetan">Tibetan</option>
               <option value="english">English</option>
               <option value="ladakhi">Ladakhi</option>
-              <option value="lahual_spiti">Lahual-Spiti</option>
+              <option value="lahual_spiti">Lahaul-Spiti</option>
             </select>
             <span id="language-hint" className="form-hint">
-              Choose your preferred language (Tibetan, English, Ladakhi, or Lahual-Spiti) for the doctor.
+              Choose your preferred language (Tibetan, English, Ladakhi, or Lahaul-Spiti) for the doctor.
             </span>
           </div>
 
           {/* Dr. Tashi's Family Head & Father Clinical Subsidy */}
-          <div
+          {APP_CONFIG.familyHeadSubsidy.enabled && (<div
             onClick={() => update("isFamilyHeadDiscount", !data.isFamilyHeadDiscount)}
             className="booking-subsidy-card"
             style={{
@@ -1031,7 +1031,7 @@ function StepPatientDetails({
                 </p>
               </div>
             </div>
-          </div>
+          </div>)}
         </div>
 
         {/* Privacy notice */}
@@ -1520,26 +1520,26 @@ function StepReview({
         },
       ]
       : patient.isFamilyHeadDiscount
-      ? [
-        { label: "Standard fee", value: APP_CONFIG.consultationFeeDisplay },
-        {
-          label: "Family Head Subsidy (50%)",
-          value: (
-            <span style={{ color: "var(--color-maroon)", fontWeight: 600 }}>
-              -{APP_CONFIG.familyHeadSubsidy.feeDisplay} (Dr. Tashi Community Initiative)
-            </span>
-          ),
-        },
-        {
-          label: "Total payable",
-          value: (
-            <span style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--color-maroon)" }}>
-              {APP_CONFIG.familyHeadSubsidy.feeDisplay}
-            </span>
-          ),
-        },
-      ]
-      : [{ label: "Consultation fee", value: APP_CONFIG.consultationFeeDisplay }]),
+        ? [
+          { label: "Standard fee", value: APP_CONFIG.consultationFeeDisplay },
+          {
+            label: "Family Head Subsidy (50%)",
+            value: (
+              <span style={{ color: "var(--color-maroon)", fontWeight: 600 }}>
+                -{APP_CONFIG.familyHeadSubsidy.feeDisplay} (Dr. Tashi Community Initiative)
+              </span>
+            ),
+          },
+          {
+            label: "Total payable",
+            value: (
+              <span style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--color-maroon)" }}>
+                {APP_CONFIG.familyHeadSubsidy.feeDisplay}
+              </span>
+            ),
+          },
+        ]
+        : [{ label: "Consultation fee", value: APP_CONFIG.consultationFeeDisplay }]),
     { label: "Patient name", value: patient.fullName },
     { label: "Mobile", value: patient.mobileNumber },
     { label: "Email", value: patient.emailAddress },

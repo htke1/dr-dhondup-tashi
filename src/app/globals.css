@@ -586,6 +586,10 @@ p {
 }
 
 /* Responsive navigation and hero overrides */
+.hero-mobile-card {
+  display: none !important;
+}
+
 @media (max-width: 767px) {
   .desktop-nav {
     display: none !important;
@@ -597,9 +601,16 @@ p {
     grid-template-columns: 1fr !important;
   }
   .hero-photo {
-    order: -1;
-    max-width: 280px;
-    margin: 0 auto;
+    display: none !important;
+  }
+  .hero-mobile-card {
+    display: block !important;
+    margin-bottom: 1.25rem;
+    background: rgba(255,255,255,0.7);
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 0.875rem;
+    backdrop-filter: blur(8px);
   }
 }
 

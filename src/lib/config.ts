@@ -12,7 +12,7 @@ export const APP_CONFIG = {
     heroName: "Dr. Dhun Tash",
     shortName: "Dr. Dhun Tash",
     title: "MBBS, M.Med (Family Medicine)",
-    role: "General Physician | Clinical Sonologist | Chief Medical Officer | Community Health Advocate",
+    role: "Family Physician | Clinical Sonologist | Chief Medical Officer | Community Health Advocate",
     experience: "Years of Clinical Practice",
     hospital: "Gaden Jangtse Hospital, Mundgod, Karnataka, India",
     email: "dhontash@gmail.com",
@@ -72,7 +72,7 @@ export const APP_CONFIG = {
   /** Application branding */
   site: {
     name: "Dr. Dhondup Tashi | Online Medical Consultations",
-    tagline: "Dedicated online consulation for Ladakhi, Tibetan, Lahaut-Spiti and Monpa communities.",
+    tagline: "Dedicated online consultation for Tibetan, Ladakhi, Lahaul-Spiti and Monpa communities.",
     url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   },
 
@@ -80,10 +80,10 @@ export const APP_CONFIG = {
   timezone: "Asia/Kolkata" as const,
 
   /** Consultation fee in INR */
-  consultationFee: 850,
-  consultationFeeINR: 850,
+  consultationFee: 650,
+  consultationFeeINR: 650,
   /** Human-readable fee string */
-  consultationFeeDisplay: "₹850",
+  consultationFeeDisplay: "₹650",
 
   /** Payment Gateway & UPI Configuration */
   payment: {
@@ -98,7 +98,7 @@ export const APP_CONFIG = {
 
   /** Family Head & Father Health Initiative (Clinical Subsidy) */
   familyHeadSubsidy: {
-    enabled: true,
+    enabled: false,
     discountPercent: 41,
     fee: 500,
     feeDisplay: "₹500",
@@ -109,7 +109,7 @@ export const APP_CONFIG = {
 
   /** First Consultation Complimentary Initiative (100% Free / ₹0) */
   firstConsultationFree: {
-    enabled: true,
+    enabled: false,
     fee: 0,
     feeDisplay: "FREE (₹0)",
     badgeText: "1st Consultation Complimentary",

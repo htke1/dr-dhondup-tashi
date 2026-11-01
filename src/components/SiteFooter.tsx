@@ -55,12 +55,43 @@ export default function SiteFooter() {
               {APP_CONFIG.doctor.name}
             </p>
             <p style={{ fontSize: "0.875rem", lineHeight: 1.65, marginBottom: "0.75rem" }}>
-              Senior General Physician &amp; Clinical Sonologist.
+              Family Physician &amp; Clinical Sonologist.
               Chief Medical Officer at Gaden Jangtse Hospital, Mundgod, Karnataka.
             </p>
             <p style={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.6)", marginBottom: "1.25rem" }}>
               Accessible, evidence-based online consultations via Google Meet.
             </p>
+            {/* Instagram link */}
+            <a
+              href="https://www.instagram.com/dr_dhun_tashi/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                fontSize: "0.875rem",
+                color: "rgba(255,255,255,0.75)",
+                textDecoration: "none",
+                marginBottom: "1rem",
+              }}
+              aria-label="Follow Dr. Dhun Tash on Instagram"
+            >
+              {/* Instagram icon */}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="ig-footer-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#f09433" />
+                    <stop offset="50%" stopColor="#dc2743" />
+                    <stop offset="100%" stopColor="#bc1888" />
+                  </linearGradient>
+                </defs>
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" stroke="url(#ig-footer-grad)" strokeWidth="1.75" />
+                <circle cx="12" cy="12" r="4.5" stroke="url(#ig-footer-grad)" strokeWidth="1.75" />
+                <circle cx="17.5" cy="6.5" r="1.2" fill="url(#ig-footer-grad)" />
+              </svg>
+              @dr_dhun_tashi
+            </a>
           </div>
 
           {/* Quick links */}
