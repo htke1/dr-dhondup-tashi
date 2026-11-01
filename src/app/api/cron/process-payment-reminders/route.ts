@@ -3,6 +3,7 @@ import { getAdminSupabase } from "@/lib/supabase/admin";
 import { sendPaymentVerificationReminderEmail } from "@/lib/email";
 import { isAuthenticatedAdmin } from "@/lib/auth";
 import { fallbackReminders } from "@/lib/reminder-queue";
+import { APP_CONFIG } from "@/lib/config";
 
 interface DueAppointment {
   id: string;
@@ -291,7 +292,7 @@ async function processRemindersHandler(request: NextRequest) {
         patientName,
         appointmentDate: apt?.appointment_date || new Date().toISOString().split("T")[0],
         slotTime: apt?.slot_time || "19:00",
-        consultationFee: apt?.consultation_fee || 1000,
+        consultationFee: apt?.consultation_fee || APP_CONFIG.consultationFee,
       });
 
       if (emailResult.success) {

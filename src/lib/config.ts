@@ -79,10 +79,10 @@ export const APP_CONFIG = {
   timezone: "Asia/Kolkata" as const,
 
   /** Consultation fee in INR */
-  consultationFee: 1000,
-  consultationFeeINR: 1000,
+  consultationFee: 800,
+  consultationFeeINR: 800,
   /** Human-readable fee string */
-  consultationFeeDisplay: "₹1,000",
+  consultationFeeDisplay: "₹800",
 
   /** Payment Gateway & UPI Configuration */
   payment: {
@@ -99,8 +99,8 @@ export const APP_CONFIG = {
   familyHeadSubsidy: {
     enabled: true,
     discountPercent: 50,
-    fee: 500,
-    feeDisplay: "₹500",
+    fee: 400,
+    feeDisplay: "₹400",
     name: "Family Head & Father Health Initiative",
     rationale:
       "Dr. Dhondup Tashi's clinical observation through years of practice: Fathers and family heads frequently delay medical attention until illnesses reach late stages. We offer this 50% clinical subsidy to encourage early diagnosis and timely care.",

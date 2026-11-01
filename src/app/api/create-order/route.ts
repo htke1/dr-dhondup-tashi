@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       // Empty body is allowed, defaults to consultation fee
     }
 
-    // Default amount to 1000 INR (100,000 paise) if not passed
+    // Default amount to 800 INR (80,000 paise) if not passed
     const rawAmount = body.amount !== undefined ? Number(body.amount) : APP_CONFIG.consultationFeeINR * 100;
     const currency = body.currency || "INR";
     const receipt = body.receipt || `rcpt_${Date.now()}`;

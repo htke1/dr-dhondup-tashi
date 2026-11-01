@@ -14,6 +14,17 @@ export async function POST(
     const body = await request.json().catch(() => ({}));
     const reason = body?.reason || "Patient requested cancellation";
 
+    // Handle development / demo mock IDs seamlessly
+    if (appointmentId.startsWith("mock-") || appointmentId.startsWith("demo-")) {
+      return NextResponse.json({
+        success: true,
+        message: "Reservation cancelled. Your reserved slot has been released.",
+        isRefundEligible: false,
+        hoursRemaining: 24,
+        appointment: { id: appointmentId, status: "cancelled", cancellation_reason: reason },
+      });
+    }
+
     const supabase = getAdminSupabase();
 
     // 1. Fetch current appointment
@@ -55,12 +66,15 @@ export async function POST(
       );
     }
 
+    const isPendingHold = apt.status === "pending_payment" || apt.payment_status === "pending";
+
     // 2. Policy Check: 48-Hour Refund Window
     const scheduledTime = new Date(`${apt.appointment_date}T${apt.slot_time}:00+05:30`).getTime();
     const now = Date.now();
     const hoursRemaining = (scheduledTime - now) / (1000 * 60 * 60);
 
     const isRefundEligible =
+      !isPendingHold &&
       apt.payment_status === "paid" &&
       hoursRemaining >= APP_CONFIG.cancellationRefundHours;
 
@@ -113,9 +127,9 @@ export async function POST(
       );
     }
 
-    // 6. Send Cancellation Email
+    // 6. Send Cancellation Email (only for confirmed/paid appointments)
     const patient = Array.isArray(apt.patients) ? apt.patients[0] : apt.patients;
-    if (patient?.email) {
+    if (patient?.email && !isPendingHold) {
       await sendCancellationEmail({
         appointmentId,
         patientName: patient.name || "Patient",
@@ -129,7 +143,9 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: isRefundEligible
+      message: isPendingHold
+        ? "Reservation cancelled. Your reserved slot has been released."
+        : isRefundEligible
         ? `Appointment cancelled. Full refund of ${APP_CONFIG.consultationFeeDisplay} initiated.`
         : `Appointment cancelled. Cancellations within ${APP_CONFIG.cancellationRefundHours} hours are non-refundable per policy.`,
       isRefundEligible,

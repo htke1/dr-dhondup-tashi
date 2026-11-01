@@ -236,6 +236,10 @@ export default function BookingPage() {
                 slot={selectedSlot!}
                 patient={patientData}
                 onBack={() => goToStep(3)}
+                onCancelBooking={() => {
+                  setSelectedSlot(null);
+                  goToStep(1);
+                }}
                 onConfirmed={(apt) => {
                   setConfirmedAppointment(apt);
                   goToStep(5);
@@ -316,7 +320,7 @@ function StepDateSelect({
         aria-label="Select appointment date"
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fill, minmax(78px, 1fr))",
           gap: "0.5rem",
           marginBottom: "1.75rem",
         }}
@@ -897,11 +901,11 @@ function StepPatientDetails({
                     Booking for a Father or Head of the Family?
                   </span>
                   <span className="booking-subsidy-badge">
-                    50% Subsidy · ₹500
+                    50% Subsidy · {APP_CONFIG.familyHeadSubsidy.feeDisplay}
                   </span>
                 </label>
                 <p style={{ fontSize: "0.8125rem", color: "var(--color-charcoal-soft)", lineHeight: 1.5, margin: 0 }}>
-                  In Dr. Dhondup Tashi’s years of practice, fathers and family heads frequently delay medical attention until symptoms become severe. To encourage early evaluation, this consultation is subsidized by 50% (₹500 instead of ₹1,000).
+                  In Dr. Dhondup Tashi’s years of practice, fathers and family heads frequently delay medical attention until symptoms become severe. To encourage early evaluation, this consultation is subsidized by 50% ({APP_CONFIG.familyHeadSubsidy.feeDisplay} instead of {APP_CONFIG.consultationFeeDisplay}).
                 </p>
               </div>
             </div>
@@ -958,11 +962,13 @@ function StepReview({
   patient,
   onBack,
   onConfirmed,
+  onCancelBooking,
 }: {
   slot: SelectedSlot;
   patient: PatientFormData;
   onBack: () => void;
   onConfirmed: (appointment: any) => void;
+  onCancelBooking?: () => void;
 }) {
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -975,6 +981,81 @@ function StepReview({
     alreadyRequested: boolean;
   } | null>(null);
   const [copiedUpi, setCopiedUpi] = useState(false);
+
+  // Exit / Cancel Reservation Modal States
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [preferNotToShareReason, setPreferNotToShareReason] = useState(false);
+  const [cancellingReservation, setCancellingReservation] = useState(false);
+
+  // Auto-scroll up to the top of the QR payment step smoothly below navbar
+  useEffect(() => {
+    if (upiPaymentData) {
+      const scrollUpToQr = () => {
+        const panel = document.getElementById("upi-payment-panel") || document.getElementById("booking-step-panel");
+        if (panel) {
+          const navEl = document.querySelector(".site-nav");
+          const navHeight = navEl ? navEl.getBoundingClientRect().height : 68;
+          const targetY = panel.getBoundingClientRect().top + window.pageYOffset - (navHeight + 16);
+          window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      };
+
+      scrollUpToQr();
+      const t1 = setTimeout(scrollUpToQr, 60);
+      const t2 = setTimeout(scrollUpToQr, 180);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+  }, [upiPaymentData]);
+
+  const handleBackFromQr = () => {
+    setUpiPaymentData(null);
+    setErrorMsg(null);
+    setPaymentCheckNotification(null);
+    setTimeout(() => {
+      const panel = document.getElementById("booking-step-panel");
+      if (panel) {
+        const navEl = document.querySelector(".site-nav");
+        const navHeight = navEl ? navEl.getBoundingClientRect().height : 68;
+        const targetY = panel.getBoundingClientRect().top + window.pageYOffset - (navHeight + 16);
+        window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
+      }
+    }, 50);
+  };
+
+  const handleConfirmExitAndCancel = async () => {
+    setCancellingReservation(true);
+    const appointmentId = upiPaymentData?.appointmentId;
+    const finalReason = preferNotToShareReason
+      ? "Patient opted not to share a reason"
+      : cancelReason.trim() || "Patient exited during UPI QR payment";
+
+    try {
+      if (appointmentId) {
+        await fetch(`/api/appointments/${appointmentId}/cancel`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reason: finalReason }),
+        });
+      }
+    } catch (err) {
+      console.warn("Cancel appointment request warning:", err);
+    } finally {
+      setCancellingReservation(false);
+      setShowCancelModal(false);
+      setUpiPaymentData(null);
+      if (onCancelBooking) {
+        onCancelBooking();
+      } else {
+        onBack();
+      }
+    }
+  };
 
   const handleProceedToPayment = async () => {
     setSubmitting(true);
@@ -1190,12 +1271,12 @@ function StepReview({
     { label: "Format", value: "Online via Google Meet" },
     ...(patient.isFamilyHeadDiscount
       ? [
-          { label: "Standard fee", value: "₹1,000" },
+          { label: "Standard fee", value: APP_CONFIG.consultationFeeDisplay },
           {
             label: "Family Head Subsidy (50%)",
             value: (
               <span style={{ color: "var(--color-maroon)", fontWeight: 600 }}>
-                -₹500 (Dr. Tashi Community Initiative)
+                -{APP_CONFIG.familyHeadSubsidy.feeDisplay} (Dr. Tashi Community Initiative)
               </span>
             ),
           },
@@ -1203,7 +1284,7 @@ function StepReview({
             label: "Total payable",
             value: (
               <span style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--color-maroon)" }}>
-                ₹500
+                {APP_CONFIG.familyHeadSubsidy.feeDisplay}
               </span>
             ),
           },
@@ -1226,11 +1307,7 @@ function StepReview({
     return (
       <div className="card card-padded" style={{ marginBottom: "1.25rem" }} id="upi-payment-panel">
         <button
-          onClick={() => {
-            setUpiPaymentData(null);
-            setErrorMsg(null);
-            setPaymentCheckNotification(null);
-          }}
+          onClick={handleBackFromQr}
           className="btn btn-ghost btn-sm"
           style={{ marginBottom: "1.25rem", padding: "0.375rem 0", gap: "0.375rem" }}
           aria-label="Back to appointment review"
@@ -1272,7 +1349,7 @@ function StepReview({
             background: "var(--color-cream)",
             border: "1.5px solid var(--color-border-soft)",
             borderRadius: "var(--radius-lg)",
-            padding: "1.5rem",
+            padding: "1.5rem 1.25rem",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
@@ -1285,27 +1362,87 @@ function StepReview({
             style={{
               width: "100%",
               maxWidth: "420px",
-              padding: "0.85rem 1rem",
+              padding: "0.95rem 1.15rem",
               background: "#FFFFFF",
               border: "1px solid var(--color-border-soft)",
               borderRadius: "var(--radius-md)",
               display: "flex",
               flexDirection: "column",
-              gap: "0.4rem",
+              gap: "0.6rem",
               fontSize: "0.85rem",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.03)",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ color: "var(--color-charcoal-muted)", fontSize: "0.8rem" }}>Doctor</span>
-              <strong style={{ color: "var(--color-charcoal)" }}>Dr. Dhondup Tashi</strong>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+              <span style={{ color: "var(--color-charcoal-muted)", fontSize: "0.8rem", flexShrink: 0, minWidth: "95px" }}>
+                Doctor
+              </span>
+              <strong style={{ color: "var(--color-charcoal)", textAlign: "right", fontSize: "0.875rem" }}>
+                Dr. Dhondup Tashi
+              </strong>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.35rem", borderTop: "1px dashed var(--color-border-soft)" }}>
-              <span style={{ color: "var(--color-charcoal-muted)", fontSize: "0.8rem" }}>Appointment</span>
-              <strong style={{ color: "var(--color-maroon)" }}>{displayDate} at {slot.slotLabel} IST</strong>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                gap: "1.25rem",
+                paddingTop: "0.5rem",
+                borderTop: "1px dashed var(--color-border-soft)",
+              }}
+            >
+              <span
+                style={{
+                  color: "var(--color-charcoal-muted)",
+                  fontSize: "0.8rem",
+                  flexShrink: 0,
+                  minWidth: "95px",
+                  paddingTop: "0.1rem",
+                }}
+              >
+                Appointment
+              </span>
+              <div style={{ textAlign: "right", flex: 1, minWidth: 0 }}>
+                <strong
+                  style={{
+                    color: "var(--color-maroon)",
+                    display: "block",
+                    lineHeight: 1.35,
+                    fontSize: "0.875rem",
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {displayDate}
+                </strong>
+                <span
+                  style={{
+                    color: "var(--color-maroon)",
+                    fontSize: "0.8125rem",
+                    fontWeight: 600,
+                    display: "inline-block",
+                    marginTop: "0.15rem",
+                  }}
+                >
+                  {slot.slotLabel} IST
+                </span>
+              </div>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.35rem", borderTop: "1px dashed var(--color-border-soft)" }}>
-              <span style={{ color: "var(--color-charcoal-muted)", fontSize: "0.8rem" }}>Consultation Fee</span>
-              <strong style={{ color: "var(--color-maroon)", fontSize: "1.1rem" }}>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "1rem",
+                paddingTop: "0.5rem",
+                borderTop: "1px dashed var(--color-border-soft)",
+              }}
+            >
+              <span style={{ color: "var(--color-charcoal-muted)", fontSize: "0.8rem", flexShrink: 0, minWidth: "95px" }}>
+                Consultation Fee
+              </span>
+              <strong style={{ color: "var(--color-maroon)", fontSize: "1.15rem", textAlign: "right" }}>
                 {upiPaymentData.amountFormatted || `₹${upiPaymentData.amount}`}
               </strong>
             </div>
@@ -1345,27 +1482,31 @@ function StepReview({
               background: "#FFFFFF",
               border: "1px solid var(--color-border-soft)",
               borderRadius: "var(--radius-md)",
-              padding: "1rem",
+              padding: "1rem 1.15rem",
               display: "flex",
               flexDirection: "column",
-              gap: "0.5rem",
+              gap: "0.55rem",
               fontSize: "0.875rem",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ color: "var(--color-charcoal-muted)", fontSize: "0.8125rem" }}>Verified Recipient</span>
-              <span style={{ fontWeight: 600, color: "var(--color-charcoal)", display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#2E7D32" aria-hidden="true">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+              <span style={{ color: "var(--color-charcoal-muted)", fontSize: "0.8125rem", flexShrink: 0, minWidth: "115px" }}>
+                Verified Recipient
+              </span>
+              <span style={{ fontWeight: 600, color: "var(--color-charcoal)", display: "flex", alignItems: "center", gap: "0.3rem", textAlign: "right" }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#2E7D32" aria-hidden="true" style={{ flexShrink: 0 }}>
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                 </svg>
                 {upiPaymentData.recipientName}
               </span>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.35rem", borderTop: "1px dashed var(--color-border-soft)" }}>
-              <span style={{ color: "var(--color-charcoal-muted)", fontSize: "0.8125rem" }}>UPI ID (VPA)</span>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <code style={{ fontFamily: "monospace", fontWeight: 600, color: "var(--color-maroon)", fontSize: "0.875rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", paddingTop: "0.4rem", borderTop: "1px dashed var(--color-border-soft)" }}>
+              <span style={{ color: "var(--color-charcoal-muted)", fontSize: "0.8125rem", flexShrink: 0, minWidth: "115px" }}>
+                UPI ID (VPA)
+              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
+                <code style={{ fontFamily: "monospace", fontWeight: 600, color: "var(--color-maroon)", fontSize: "0.875rem", wordBreak: "break-all" }}>
                   {upiPaymentData.vpa}
                 </code>
                 <button
@@ -1376,7 +1517,7 @@ function StepReview({
                     setTimeout(() => setCopiedUpi(false), 2000);
                   }}
                   className="btn btn-ghost btn-sm"
-                  style={{ padding: "0.2rem 0.5rem", fontSize: "0.75rem" }}
+                  style={{ padding: "0.2rem 0.5rem", fontSize: "0.75rem", flexShrink: 0 }}
                   aria-label="Copy UPI ID"
                 >
                   {copiedUpi ? "Copied! ✓" : "Copy"}
@@ -1384,9 +1525,11 @@ function StepReview({
               </div>
             </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.35rem", borderTop: "1px dashed var(--color-border-soft)" }}>
-              <span style={{ color: "var(--color-charcoal-muted)", fontSize: "0.8125rem" }}>Booking Reference</span>
-              <span style={{ fontFamily: "monospace", fontWeight: 600, color: "var(--color-charcoal)", fontSize: "0.8125rem" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", paddingTop: "0.4rem", borderTop: "1px dashed var(--color-border-soft)" }}>
+              <span style={{ color: "var(--color-charcoal-muted)", fontSize: "0.8125rem", flexShrink: 0, minWidth: "115px" }}>
+                Booking Reference
+              </span>
+              <span style={{ fontFamily: "monospace", fontWeight: 600, color: "var(--color-charcoal)", fontSize: "0.8125rem", textAlign: "right" }}>
                 {upiPaymentData.bookingRef || upiPaymentData.appointmentId?.slice(0, 8).toUpperCase()}
               </span>
             </div>
@@ -1397,7 +1540,7 @@ function StepReview({
             <a
               href={upiPaymentData.upiUri}
               className="btn btn-secondary btn-sm"
-              style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
+              style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", width: "100%", maxWidth: "420px", justifyContent: "center" }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
@@ -1431,7 +1574,7 @@ function StepReview({
           </div>
         </div>
 
-        {/* Patient Action: "I've completed the payment" */}
+        {/* Patient Action: "I've completed the payment" and "Exit or Cancel" */}
         <div
           style={{
             background: "#FFFFFF",
@@ -1486,6 +1629,31 @@ function StepReview({
               "I've completed the payment"
             )}
           </button>
+
+          {/* Secondary Action: Exit or Cancel Reservation */}
+          <div style={{ marginTop: "1rem", textAlign: "center", borderTop: "1px dashed var(--color-border-soft)", paddingTop: "0.85rem" }}>
+            <button
+              type="button"
+              onClick={() => setShowCancelModal(true)}
+              className="btn btn-ghost btn-sm"
+              id="exit-cancel-reservation-btn"
+              style={{
+                color: "#78716C",
+                fontSize: "0.85rem",
+                padding: "0.4rem 0.85rem",
+                gap: "0.4rem",
+                display: "inline-flex",
+                alignItems: "center",
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+              </svg>
+              Exit or Cancel Reservation
+            </button>
+          </div>
 
           {paymentCheckNotification && (
             <div
@@ -1551,6 +1719,199 @@ function StepReview({
         <p style={{ textAlign: "center", fontSize: "0.75rem", color: "var(--color-charcoal-muted)", margin: 0 }}>
           🔒 Privacy guarantee: No medical conditions, phone numbers, or diagnosis details are shared in UPI payment strings.
         </p>
+
+        {/* Exit / Cancel Reservation Modal Dialog */}
+        {showCancelModal && (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cancel-modal-title"
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(15, 23, 42, 0.6)",
+              backdropFilter: "blur(3px)",
+              WebkitBackdropFilter: "blur(3px)",
+              zIndex: 9999,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "1rem",
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget && !cancellingReservation) {
+                setShowCancelModal(false);
+              }
+            }}
+          >
+            <div
+              className="card"
+              style={{
+                width: "100%",
+                maxWidth: "460px",
+                background: "#FFFFFF",
+                borderRadius: "var(--radius-lg)",
+                padding: "1.5rem",
+                boxShadow: "0 20px 45px -10px rgba(0,0,0,0.25)",
+                border: "1px solid var(--color-border-soft)",
+                animation: "modalPop 0.22s ease-out",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                  <div
+                    style={{
+                      width: "36px",
+                      height: "36px",
+                      borderRadius: "50%",
+                      background: "rgba(123, 45, 62, 0.08)",
+                      color: "var(--color-maroon)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <line x1="12" y1="8" x2="12" y2="12"/>
+                      <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                  </div>
+                  <h3
+                    id="cancel-modal-title"
+                    style={{
+                      fontFamily: "var(--font-serif)",
+                      fontSize: "1.2rem",
+                      color: "var(--color-charcoal)",
+                      margin: 0,
+                    }}
+                  >
+                    Exit or Cancel Reservation
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => !cancellingReservation && setShowCancelModal(false)}
+                  disabled={cancellingReservation}
+                  aria-label="Close dialog"
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "var(--color-charcoal-muted)",
+                    padding: "0.25rem",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: "4px",
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+
+              <p style={{ fontSize: "0.875rem", color: "var(--color-charcoal-soft)", lineHeight: 1.5, margin: "0 0 1rem" }}>
+                Exiting will release your reserved appointment slot for{" "}
+                <strong>{displayDate} at {slot.slotLabel}</strong> so another patient can book.
+              </p>
+
+              <div style={{ marginBottom: "1rem" }}>
+                <label
+                  htmlFor="cancel-reason-input"
+                  style={{
+                    display: "block",
+                    fontSize: "0.8125rem",
+                    fontWeight: 600,
+                    color: "var(--color-charcoal)",
+                    marginBottom: "0.35rem",
+                  }}
+                >
+                  Reason for cancellation <span style={{ fontWeight: 400, color: "var(--color-charcoal-muted)" }}>(optional)</span>
+                </label>
+                <textarea
+                  id="cancel-reason-input"
+                  className="form-input"
+                  rows={3}
+                  placeholder="Let us know why (e.g., need another date, UPI issue, change of plan)..."
+                  value={preferNotToShareReason ? "" : cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  disabled={preferNotToShareReason || cancellingReservation}
+                  style={{
+                    resize: "none",
+                    fontSize: "0.875rem",
+                    opacity: preferNotToShareReason ? 0.5 : 1,
+                    background: preferNotToShareReason ? "var(--color-ivory)" : "#FFFFFF",
+                  }}
+                />
+
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    marginTop: "0.6rem",
+                    cursor: "pointer",
+                    fontSize: "0.8125rem",
+                    color: "var(--color-charcoal-soft)",
+                    userSelect: "none",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={preferNotToShareReason}
+                    onChange={(e) => {
+                      setPreferNotToShareReason(e.target.checked);
+                      if (e.target.checked) setCancelReason("");
+                    }}
+                    disabled={cancellingReservation}
+                    style={{ accentColor: "var(--color-maroon)", width: "16px", height: "16px", cursor: "pointer" }}
+                  />
+                  <span>I prefer not to share a reason</span>
+                </label>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "0.75rem",
+                  justifyContent: "flex-end",
+                  marginTop: "1.25rem",
+                  paddingTop: "0.85rem",
+                  borderTop: "1px solid var(--color-border-soft)",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowCancelModal(false)}
+                  disabled={cancellingReservation}
+                  className="btn btn-secondary btn-sm"
+                  style={{ flex: "1 1 auto", justifyContent: "center" }}
+                >
+                  Keep Reservation
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmExitAndCancel}
+                  disabled={cancellingReservation}
+                  className="btn btn-primary btn-sm"
+                  style={{
+                    flex: "1 1 auto",
+                    justifyContent: "center",
+                    background: "var(--color-maroon)",
+                  }}
+                  id="confirm-cancel-exit-btn"
+                >
+                  {cancellingReservation ? "Cancelling..." : "Confirm & Exit"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -1849,7 +2210,7 @@ function StepConfirmed({
             borderRadius: "var(--radius-md)",
             padding: "1rem 1.25rem",
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
             gap: "1rem",
             marginBottom: "1.5rem",
             border: "1px solid var(--color-border-soft)",
@@ -1889,7 +2250,7 @@ function StepConfirmed({
                 marginTop: "0.2rem",
               }}
             >
-              {patient.isFamilyHeadDiscount ? "₹500 (Subsidized)" : "₹1,000"} · Pending Verification
+              {patient.isFamilyHeadDiscount ? `${APP_CONFIG.familyHeadSubsidy.feeDisplay} (Subsidized)` : APP_CONFIG.consultationFeeDisplay} · Pending Verification
             </span>
           </div>
         </div>
@@ -1982,7 +2343,7 @@ function StepConfirmed({
         <dl
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
             gap: "1rem",
             background: "var(--color-cream)",
             padding: "1.25rem",
@@ -2296,7 +2657,7 @@ function StepConfirmed({
       <dl
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
           gap: "1rem",
           background: "var(--color-cream)",
           padding: "1.25rem",

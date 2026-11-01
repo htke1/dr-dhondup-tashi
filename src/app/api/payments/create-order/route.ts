@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let amountInPaise = APP_CONFIG.consultationFeeINR * 100; // default 100000 paise = ₹1,000 INR
+    let amountInPaise = APP_CONFIG.consultationFeeINR * 100; // default 80000 paise = ₹800 INR
 
     // Connect to Supabase to verify hold is still valid and fetch fee
     try {

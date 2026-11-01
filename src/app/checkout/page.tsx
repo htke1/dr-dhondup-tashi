@@ -13,7 +13,7 @@ declare global {
 }
 
 export default function StandardCheckoutPage() {
-  const [amountInRupees, setAmountInRupees] = useState<number>(1000);
+  const [amountInRupees, setAmountInRupees] = useState<number>(800);
   const [customerName, setCustomerName] = useState<string>("Tenzin Norbu");
   const [customerEmail, setCustomerEmail] = useState<string>("patient@example.com");
   const [customerPhone, setCustomerPhone] = useState<string>("9845012345");
@@ -443,18 +443,18 @@ export default function StandardCheckoutPage() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => setAmountInRupees(500)}
+                      onClick={() => setAmountInRupees(400)}
                       className="btn btn-secondary btn-sm"
                       title="50% Clinical Subsidy for Father / Family Head"
                     >
-                      ₹500 (Subsidy)
+                      ₹400 (Subsidy)
                     </button>
                     <button
                       type="button"
-                      onClick={() => setAmountInRupees(1000)}
+                      onClick={() => setAmountInRupees(800)}
                       className="btn btn-secondary btn-sm"
                     >
-                      ₹1,000 (Standard)
+                      ₹800 (Standard)
                     </button>
                   </div>
                   <span style={{ fontSize: "0.75rem", color: "var(--color-charcoal-muted)", marginTop: "0.25rem", display: "block" }}>

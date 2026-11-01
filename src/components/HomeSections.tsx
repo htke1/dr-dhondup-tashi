@@ -551,7 +551,7 @@ export function HowItWorksSection() {
       number: "02",
       title: "Enter details & pay",
       description:
-        `Provide your medical reason and preferred language (English or Tibetan). Complete payment securely via Razorpay (₹1,000 standard, or ₹500 with 50% subsidy for fathers & family heads).`,
+        `Provide your medical reason and preferred language (English or Tibetan). Complete payment securely (${APP_CONFIG.consultationFeeDisplay} standard, or ${APP_CONFIG.familyHeadSubsidy.feeDisplay} with 50% subsidy for fathers & family heads).`,
       icon: (
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
@@ -988,12 +988,12 @@ export function ConsultationInfoSection() {
               </h3>
             </div>
             <span className="family-initiative-badge">
-              50% Subsidy · ₹500
+              50% Subsidy · {APP_CONFIG.familyHeadSubsidy.feeDisplay}
             </span>
           </div>
 
           <p className="family-initiative-body">
-            In his years of clinical practice, Dr. Dhondup Tashi has observed that fathers and family heads frequently prioritize their household responsibilities over their personal wellbeing, often delaying medical care until conditions become critical. To encourage proactive checkups, early screening, and timely intervention, a <strong>50% clinical subsidy (₹500 consultation fee)</strong> is available for all fathers and family heads.
+            In his years of clinical practice, Dr. Dhondup Tashi has observed that fathers and family heads frequently prioritize their household responsibilities over their personal wellbeing, often delaying medical care until conditions become critical. To encourage proactive checkups, early screening, and timely intervention, a <strong>50% clinical subsidy ({APP_CONFIG.familyHeadSubsidy.feeDisplay} consultation fee)</strong> is available for all fathers and family heads.
           </p>
 
           <div className="family-initiative-actions">
@@ -1002,7 +1002,7 @@ export function ConsultationInfoSection() {
               className="btn btn-primary btn-sm"
               style={{ textDecoration: "none" }}
             >
-              Book Subsidized Consultation (₹500) &rarr;
+              Book Subsidized Consultation ({APP_CONFIG.familyHeadSubsidy.feeDisplay}) &rarr;
             </Link>
             <span className="family-initiative-hint">
               No coupon required · 1-click selection in booking details

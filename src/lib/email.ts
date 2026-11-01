@@ -525,7 +525,7 @@ export async function sendPaymentVerificationReminderEmail(
   const timeStr = slotObj ? slotObj.label : data.slotTime;
   const feeDisplay = data.consultationFee
     ? `₹${data.consultationFee.toLocaleString("en-IN")}`
-    : "₹1,000";
+    : APP_CONFIG.consultationFeeDisplay;
   const bookingRef = data.bookingRef;
   const adminUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/admin`;
 

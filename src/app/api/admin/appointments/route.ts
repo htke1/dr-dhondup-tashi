@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAuthenticatedAdmin } from "@/lib/auth";
 import { getAdminSupabase } from "@/lib/supabase/admin";
+import { APP_CONFIG } from "@/lib/config";
 
 export async function GET(request: NextRequest) {
   const isAuthed = await isAuthenticatedAdmin();
@@ -96,7 +97,7 @@ export async function GET(request: NextRequest) {
         appointment_date: "2026-10-25",
         slot_time: "19:00",
         status: "confirmed",
-        consultation_fee: 1000,
+        consultation_fee: APP_CONFIG.consultationFee,
         payment_status: "paid",
         google_meet_link: "https://meet.google.com/abc-defg-hij",
         reason_for_consultation: "Persistent tension headache and cervical stiffness for 2 weeks",
@@ -116,10 +117,10 @@ export async function GET(request: NextRequest) {
         appointment_date: "2026-10-25",
         slot_time: "19:20",
         status: "confirmed",
-        consultation_fee: 1000,
+        consultation_fee: APP_CONFIG.familyHeadSubsidy.fee,
         payment_status: "paid",
         google_meet_link: "https://meet.google.com/xyz-uvwx-rst",
-        reason_for_consultation: "Type 2 diabetes quarterly review, fasting blood sugar 142",
+        reason_for_consultation: "[Family Head / Father Initiative] Type 2 diabetes quarterly review, fasting blood sugar 142",
         preferred_language: "Tibetan",
         created_at: new Date().toISOString(),
         patients: {
@@ -141,7 +142,7 @@ export async function GET(request: NextRequest) {
         appointment_date: "2026-10-26",
         slot_time: "19:00",
         status: "pending_payment",
-        consultation_fee: 1000,
+        consultation_fee: APP_CONFIG.consultationFee,
         payment_status: "pending",
         google_meet_link: null,
         reason_for_consultation: "Follow up on seasonal allergic rhinitis",

@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS appointments (
     appointment_date DATE NOT NULL,
     slot_time TEXT NOT NULL, -- e.g. "19:00", "19:20", "19:40"
     status appointment_status NOT NULL DEFAULT 'pending_payment',
-    consultation_fee INTEGER NOT NULL DEFAULT 1000, -- Amount in INR
+    consultation_fee INTEGER NOT NULL DEFAULT 800, -- Amount in INR
     payment_status payment_status NOT NULL DEFAULT 'pending',
     
     -- Razorpay Integration
