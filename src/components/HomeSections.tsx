@@ -1120,6 +1120,7 @@ export function ConsultationInfoSection() {
         </div>
 
         {/* Family Head & Father Health Initiative */}
+        {APP_CONFIG.familyHeadSubsidy.enabled && (
         <div className="family-initiative-card">
           <div className="family-initiative-header">
             <div className="family-initiative-title-group">
@@ -1152,6 +1153,7 @@ export function ConsultationInfoSection() {
             </span>
           </div>
         </div>
+        )}
 
         {/* Important notice */}
         <div
@@ -1189,7 +1191,7 @@ export function ConsultationInfoSection() {
               Instant Confirmation & Rescheduling Policy
             </p>
             <p style={{ fontSize: "0.875rem", color: "var(--color-charcoal-soft)", lineHeight: 1.5, margin: 0 }}>
-              Your appointment is guaranteed and your Google Meet room created the moment your Razorpay payment completes. Self-service rescheduling is permitted up to 6 hours before your session. Full refunds are available with at least 48 hours notice.
+              Your appointment is guaranteed and your Google Meet room created the moment your payment completes. Self-service rescheduling is permitted up to 6 hours before your session. Full refunds are available with at least 48 hours notice.
             </p>
           </div>
         </div>
