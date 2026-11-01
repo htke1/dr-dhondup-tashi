@@ -19,7 +19,7 @@ interface PatientFormData {
   emailAddress: string;
   age: string;
   reasonForConsultation: string;
-  preferredLanguage: "english" | "tibetan" | "ladakhi" | "lahual_spiti" | "";
+  preferredLanguage: "english" | "tibetan" | "hindi" | "ladakhi" | "lahual_spiti" | "";
   isFamilyHeadDiscount: boolean;
 }
 
@@ -29,6 +29,8 @@ function formatPatientLanguage(lang: string): string {
       return "Tibetan";
     case "english":
       return "English";
+    case "hindi":
+      return "Hindi";
     case "ladakhi":
       return "Ladakhi";
     case "lahual_spiti":
@@ -977,11 +979,12 @@ function StepPatientDetails({
               <option value="">No preference</option>
               <option value="tibetan">Tibetan</option>
               <option value="english">English</option>
+              <option value="hindi">Hindi</option>
               <option value="ladakhi">Ladakhi</option>
               <option value="lahual_spiti">Lahaul-Spiti</option>
             </select>
             <span id="language-hint" className="form-hint">
-              Choose your preferred language (Tibetan, English, Ladakhi, or Lahaul-Spiti) for the doctor.
+              Choose your preferred language (Tibetan, English, Hindi, Ladakhi, or Lahaul-Spiti) for the doctor.
             </span>
           </div>
 
