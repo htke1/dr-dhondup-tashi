@@ -41,16 +41,16 @@ export default function SiteNav() {
             href="/"
             style={{
               fontFamily: "var(--font-serif)",
-              fontSize: "1.125rem",
-              fontWeight: 500,
+              fontSize: "1.35rem",
+              fontWeight: 700,
               color: "var(--color-maroon)",
               textDecoration: "none",
               letterSpacing: "-0.01em",
               flexShrink: 0,
             }}
-            aria-label={`${APP_CONFIG.doctor.name} — Home`}
+            aria-label={`${APP_CONFIG.doctor.name} Online Consultation — Home`}
           >
-            {APP_CONFIG.doctor.name}
+            {APP_CONFIG.doctor.name} Online Consultation
           </Link>
 
           {/* Desktop nav */}

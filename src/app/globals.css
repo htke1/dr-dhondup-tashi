@@ -590,7 +590,24 @@ p {
   display: none !important;
 }
 
+.hero-heading-desktop {
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .hero-heading-desktop {
+    display: none !important;
+  }
+}
+
 @media (max-width: 767px) {
+  .site-nav {
+    margin-bottom: 0 !important;
+  }
+  .hero-section {
+    padding-top: 1.5rem !important;
+    padding-bottom: 2.5rem !important;
+  }
   .desktop-nav {
     display: none !important;
   }
@@ -603,14 +620,19 @@ p {
   .hero-photo {
     display: none !important;
   }
+  .hero-heading,
+  #hero-heading {
+    display: none !important;
+  }
   .hero-mobile-card {
     display: block !important;
-    margin-bottom: 1.25rem;
-    background: rgba(255,255,255,0.7);
+    margin-bottom: 1.5rem;
+    background: rgba(255,255,255,0.85);
     border: 1px solid var(--color-border-soft);
-    border-radius: var(--radius-md);
-    padding: 0.75rem 0.875rem;
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.125rem;
     backdrop-filter: blur(8px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
   }
 }
 

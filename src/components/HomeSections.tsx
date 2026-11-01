@@ -25,70 +25,6 @@ export function HeroSection() {
         >
           {/* Left: text content */}
           <div>
-            {/* Mobile-only compact doctor card (avatar + Instagram) */}
-            <div className="hero-mobile-card">
-              <div style={{ display: "flex", alignItems: "center", gap: "0.875rem" }}>
-                {/* Circular avatar */}
-                <div style={{
-                  width: "64px",
-                  height: "64px",
-                  borderRadius: "50%",
-                  overflow: "hidden",
-                  flexShrink: 0,
-                  border: "2px solid rgba(123,45,62,0.2)",
-                  boxShadow: "0 4px 12px rgba(123,45,62,0.15)",
-                }}>
-                  <Image
-                    src="/images/HomePagePicture.jpeg"
-                    alt="Dr. Dhondup Tashi"
-                    width={64}
-                    height={64}
-                    style={{ objectFit: "cover", objectPosition: "center top", width: "100%", height: "100%" }}
-                  />
-                </div>
-                {/* Name + role */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: "1rem", color: "var(--color-maroon)", margin: 0 }}>
-                    Dr. Dhun Tash
-                  </p>
-                  <p style={{ fontSize: "0.72rem", color: "var(--color-charcoal-soft)", margin: "0.1rem 0 0", lineHeight: 1.4 }}>
-                    Senior Consultant Family Physician
-                  </p>
-                </div>
-                {/* Instagram pill */}
-                <a
-                  href="https://www.instagram.com/dr_dhun_tashi/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.3rem",
-                    textDecoration: "none",
-                    background: "linear-gradient(135deg, #fdf0f8, #fff5f0)",
-                    border: "1px solid rgba(188,24,136,0.2)",
-                    borderRadius: "var(--radius-full)",
-                    padding: "0.3rem 0.6rem",
-                    flexShrink: 0,
-                  }}
-                  aria-label="Follow on Instagram"
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <defs>
-                      <linearGradient id="ig-mob-grad" x1="0%" y1="100%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#f09433" />
-                        <stop offset="50%" stopColor="#dc2743" />
-                        <stop offset="100%" stopColor="#bc1888" />
-                      </linearGradient>
-                    </defs>
-                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" stroke="url(#ig-mob-grad)" strokeWidth="1.75" />
-                    <circle cx="12" cy="12" r="4.5" stroke="url(#ig-mob-grad)" strokeWidth="1.75" />
-                    <circle cx="17.5" cy="6.5" r="1.2" fill="url(#ig-mob-grad)" />
-                  </svg>
-                  <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "#bc1888" }}>Follow</span>
-                </a>
-              </div>
-            </div>
             {/* Eyebrow */}
             <div
               style={{
@@ -121,9 +57,81 @@ export function HeroSection() {
               </span>
             </div>
 
+            {/* Mobile-only compact doctor card (avatar + Instagram) */}
+            <div className="hero-mobile-card">
+              <div style={{ display: "flex", alignItems: "center", gap: "1.125rem" }}>
+                {/* Circular avatar - enlarged */}
+                <div style={{
+                  width: "108px",
+                  height: "108px",
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  flexShrink: 0,
+                  border: "3px solid rgba(123,45,62,0.25)",
+                  boxShadow: "0 6px 18px rgba(123,45,62,0.18)",
+                }}>
+                  <Image
+                    src="/images/HomePagePicture.jpeg"
+                    alt="Dr. Dhondup Tashi"
+                    width={108}
+                    height={108}
+                    style={{ objectFit: "cover", objectPosition: "center top", width: "100%", height: "100%" }}
+                  />
+                </div>
+                {/* Name */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{
+                    fontFamily: "var(--font-serif)",
+                    fontWeight: 700,
+                    fontSize: "1.45rem",
+                    color: "var(--color-maroon)",
+                    lineHeight: 1.2,
+                    margin: 0,
+                    letterSpacing: "-0.01em",
+                  }}>
+                    Dr. Dhun Tash
+                  </p>
+                </div>
+                {/* Instagram pill */}
+                <a
+                  href="https://www.instagram.com/dr_dhun_tashi/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.4rem",
+                    textDecoration: "none",
+                    background: "linear-gradient(135deg, #fdf0f8, #fff5f0)",
+                    border: "1.5px solid rgba(188,24,136,0.3)",
+                    borderRadius: "var(--radius-full)",
+                    padding: "0.45rem 0.85rem",
+                    flexShrink: 0,
+                    boxShadow: "0 2px 8px rgba(188,24,136,0.12)",
+                  }}
+                  aria-label="Follow on Instagram"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <defs>
+                      <linearGradient id="ig-mob-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#f09433" />
+                        <stop offset="50%" stopColor="#dc2743" />
+                        <stop offset="100%" stopColor="#bc1888" />
+                      </linearGradient>
+                    </defs>
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" stroke="url(#ig-mob-grad)" strokeWidth="1.75" />
+                    <circle cx="12" cy="12" r="4.5" stroke="url(#ig-mob-grad)" strokeWidth="1.75" />
+                    <circle cx="17.5" cy="6.5" r="1.2" fill="url(#ig-mob-grad)" />
+                  </svg>
+                  <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#bc1888" }}>Follow</span>
+                </a>
+              </div>
+            </div>
+
             {/* Heading */}
             <h1
               id="hero-heading"
+              className="hero-heading hero-heading-desktop"
               style={{ marginBottom: "0.5rem", color: "var(--color-charcoal)", lineHeight: 1.15 }}
             >
               Dr. Dhun Tash
