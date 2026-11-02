@@ -53,7 +53,7 @@ export function HeroSection() {
                   color: "var(--color-saffron)",
                 }}
               >
-                Senior General Physician · 21+ Years Experience
+                Award winning general practitioner 21+ years of experience
               </span>
             </div>
 
@@ -62,7 +62,7 @@ export function HeroSection() {
               id="hero-heading"
               style={{ marginBottom: "0.5rem", color: "var(--color-charcoal)", lineHeight: 1.15 }}
             >
-              {APP_CONFIG.doctor.name}
+              Dr. Dhun Tash
             </h1>
 
             {/* Sub-role line */}
@@ -73,54 +73,45 @@ export function HeroSection() {
                 fontWeight: 600,
                 color: "var(--color-maroon)",
                 letterSpacing: "0.02em",
-                marginBottom: "0.75rem",
+                marginBottom: "0.85rem",
               }}
             >
               General Physician &middot; Clinical Sonologist &middot; Chief Medical Officer &middot; Community Health Advocate
             </p>
 
+            {/* About the Doctor button just above third box */}
+            <div style={{ marginBottom: "1.1rem" }}>
+              <Link
+                href="#about"
+                className="btn btn-secondary btn-sm"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                  fontSize: "0.8125rem",
+                  padding: "0.38rem 0.85rem",
+                  borderRadius: "var(--radius-full)",
+                }}
+              >
+                <span>About the Doctor</span>
+                <span aria-hidden="true">&rarr;</span>
+              </Link>
+            </div>
+
+            {/* Third box: Dedicated online consultation */}
             <p
               style={{
                 fontFamily: "var(--font-serif)",
                 fontSize: "clamp(1.05rem, 1.8vw, 1.25rem)",
-                color: "var(--color-charcoal-soft)",
+                color: "var(--color-charcoal)",
                 marginBottom: "1.75rem",
                 fontStyle: "italic",
-                fontWeight: 300,
+                fontWeight: 400,
                 lineHeight: 1.5,
               }}
             >
-              &ldquo;{APP_CONFIG.site.tagline}&rdquo;
+              Dedicated online consulation for Ladakhi, Tibetan, Lahaut-Spiti and Monpa communities.
             </p>
-
-            {/* Quick credentials strip */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: "0.625rem",
-                marginBottom: "1.75rem",
-                fontSize: "0.8125rem",
-                color: "var(--color-charcoal-mid)",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <span style={{ color: "var(--color-maroon)", fontWeight: 700 }}>✓</span>
-                <span>MBBS &middot; M.Med Family Med (CMC Vellore)</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <span style={{ color: "var(--color-maroon)", fontWeight: 700 }}>✓</span>
-                <span>Certified Clinical Sonologist</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <span style={{ color: "var(--color-maroon)", fontWeight: 700 }}>✓</span>
-                <span>CMO, Gaden Jangtse Hospital</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <span style={{ color: "var(--color-maroon)", fontWeight: 700 }}>✓</span>
-                <span>Echocardiography (TVGH Taiwan)</span>
-              </div>
-            </div>
 
             {/* Fee + duration badges */}
             <div
@@ -234,7 +225,7 @@ export function HeroSection() {
               >
                 <div>
                   <p style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: "0.95rem", color: "var(--color-maroon)", margin: 0 }}>
-                    Dr. Dhondup Tashi
+                    Dr. Dhun Tash
                   </p>
                   <p style={{ fontSize: "0.75rem", color: "var(--color-charcoal-soft)", margin: "0.15rem 0 0 0" }}>
                     Chief Medical Officer &middot; Gaden Jangtse Hospital
@@ -268,6 +259,18 @@ export function HeroSection() {
    ========================================================= */
 export function ConsultForSection() {
   const consultAreas = [
+    {
+      title: "General Medical & Chronic Disease Management",
+      category: "Primary & Family Care",
+      description: "Comprehensive medical assessments for multi-system symptoms, chronic illnesses, and ongoing health management.",
+      icon: (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <line x1="12" y1="8" x2="12" y2="14" />
+          <line x1="9" y1="11" x2="15" y2="11" />
+        </svg>
+      ),
+    },
     {
       title: "Full Body Check-ups & Preventive Healthcare",
       category: "Preventive Medicine",
@@ -339,18 +342,6 @@ export function ConsultForSection() {
           <path d="M15.5 7.5 5 18a2.12 2.12 0 0 0 3 3L18.5 10.5" />
           <line x1="8" y1="15" x2="10" y2="17" />
           <line x1="10" y1="13" x2="12" y2="15" />
-        </svg>
-      ),
-    },
-    {
-      title: "General Medical & Chronic Disease Management",
-      category: "Primary & Family Care",
-      description: "Comprehensive medical assessments for multi-system symptoms, chronic illnesses, and ongoing health management.",
-      icon: (
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-          <line x1="12" y1="8" x2="12" y2="14" />
-          <line x1="9" y1="11" x2="15" y2="11" />
         </svg>
       ),
     },
@@ -537,7 +528,7 @@ export function HowItWorksSection() {
       number: "01",
       title: "Select a date & time",
       description:
-        "Choose an available slot between 7:00 PM – 8:00 PM IST. Bookings close at 6:00 PM IST daily.",
+        "Choose an available slot between 6:30 PM – 8:30 PM IST. Bookings close at 6:00 PM IST daily.",
       icon: (
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -551,7 +542,7 @@ export function HowItWorksSection() {
       number: "02",
       title: "Enter details & pay",
       description:
-        `Provide your medical reason and preferred language (English or Tibetan). Complete payment securely (${APP_CONFIG.consultationFeeDisplay} standard, or ${APP_CONFIG.familyHeadSubsidy.feeDisplay} with 50% subsidy for fathers & family heads).`,
+        `Provide your symptoms or medical reason and keep related reports ready as a picture or PDF. Choose your preferred language (Tibetan, English, Ladakhi, or Lahual-Spiti) and complete payment (${APP_CONFIG.consultationFeeDisplay} standard, or ${APP_CONFIG.familyHeadSubsidy.feeDisplay} clinical subsidy for fathers & family heads).`,
       icon: (
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
@@ -808,10 +799,10 @@ export function AboutSection() {
             <div className="about-credentials-grid">
               {[
                 "MBBS — IGMC Shimla",
-                "M.Med Family Medicine (Distinction, CMC Vellore)",
-                "Postgraduate Rural Surgery Residency",
-                "Certified Clinical Sonologist",
-                "Echocardiography — TVGH Taiwan",
+                "M.MED.FAMILY MEDICINE (Distinction, CMC Vellore)",
+                "Certified Clinical Sonologist : PGDU ,IOUT ( New Delhi )",
+                "Postgraduate Rural Surgery Residency - DNB",
+                "Advanced Echocardiography — TVGH Taiwan",
                 "Chief Medical Officer, Gaden Jangtse Hospital",
                 "Health Chair RDTS & CTA Health Advisor",
                 "Dr. Chetan Bettagowda Award (Machik)",
@@ -893,7 +884,7 @@ export function ConsultationInfoSection() {
     },
     {
       label: "Evening Clinical Hours",
-      value: "7:00 PM · 7:20 PM · 7:40 PM IST",
+      value: "6:30 PM – 8:30 PM IST (6 daily sessions)",
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -988,12 +979,12 @@ export function ConsultationInfoSection() {
               </h3>
             </div>
             <span className="family-initiative-badge">
-              50% Subsidy · {APP_CONFIG.familyHeadSubsidy.feeDisplay}
+              Clinical Subsidy · {APP_CONFIG.familyHeadSubsidy.feeDisplay}
             </span>
           </div>
 
           <p className="family-initiative-body">
-            In his years of clinical practice, Dr. Dhondup Tashi has observed that fathers and family heads frequently prioritize their household responsibilities over their personal wellbeing, often delaying medical care until conditions become critical. To encourage proactive checkups, early screening, and timely intervention, a <strong>50% clinical subsidy ({APP_CONFIG.familyHeadSubsidy.feeDisplay} consultation fee)</strong> is available for all fathers and family heads.
+            In his years of clinical practice, Dr. Dhondup Tashi has observed that fathers and family heads frequently prioritize their household responsibilities over their personal wellbeing, often delaying medical care until conditions become critical. To encourage proactive checkups, early screening, and timely intervention, a <strong>clinical subsidy ({APP_CONFIG.familyHeadSubsidy.feeDisplay} consultation fee)</strong> is available for all fathers and family heads.
           </p>
 
           <div className="family-initiative-actions">

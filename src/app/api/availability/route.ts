@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const timingValidation = validateBookingTiming(dateStr, "19:00");
+  const timingValidation = validateBookingTiming(dateStr, "18:30");
   const todayStr = formatDateToISTString(new Date());
   const isToday = dateStr === todayStr;
   const isPast = dateStr < todayStr;

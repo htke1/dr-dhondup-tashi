@@ -162,7 +162,7 @@ export default function SiteFooter() {
             <p style={{ fontSize: "0.875rem", lineHeight: 1.75 }}>
               Daily consultations via Google Meet
               <br />
-              7:00 PM – 8:00 PM IST
+              6:30 PM – 8:30 PM IST
               <br />
               {APP_CONFIG.consultationFeeDisplay} per session
             </p>

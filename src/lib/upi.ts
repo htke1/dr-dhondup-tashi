@@ -22,6 +22,10 @@ export interface UpiPaymentDetails {
   currency: string;
   bookingRef: string;
   upiUri: string;
+  upiQuery?: string;
+  gpayUri?: string;
+  phonepeUri?: string;
+  paytmUri?: string;
   qrCodeDataUrl: string;
 }
 
@@ -55,7 +59,7 @@ export function isValidRecipientName(name: string): boolean {
  * - tn: Short, non-sensitive payment description (NO patient info, phone, or medical conditions)
  * - tr: Booking reference for transaction reconciliation
  */
-export function buildUpiPaymentUri(config: UpiPaymentConfig): string {
+export function buildUpiQueryParams(config: UpiPaymentConfig): string {
   const vpa = config.vpa?.trim();
   const recipientName = config.recipientName?.trim();
   const amount = config.amount;
@@ -80,16 +84,18 @@ export function buildUpiPaymentUri(config: UpiPaymentConfig): string {
   const safeRef = config.bookingRef ? config.bookingRef.replace(/[^a-zA-Z0-9-]/g, "").slice(0, 20) : "MED";
   const transactionNote = `Dr Tashi Consultation Ref ${safeRef}`;
 
-  const queryParams = new URLSearchParams({
+  return new URLSearchParams({
     pa: vpa,
     pn: recipientName,
     am: formattedAmount,
     cu: currency,
     tn: transactionNote,
     tr: safeRef,
-  });
+  }).toString();
+}
 
-  return `upi://pay?${queryParams.toString()}`;
+export function buildUpiPaymentUri(config: UpiPaymentConfig): string {
+  return `upi://pay?${buildUpiQueryParams(config)}`;
 }
 
 /**
@@ -138,13 +144,18 @@ export async function createVerifiedUpiPayment(
     ? `DT-${appointmentId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase()}`
     : `DT-${Date.now().toString().slice(-6)}`;
 
-  const upiUri = buildUpiPaymentUri({
+  const upiQuery = buildUpiQueryParams({
     vpa,
     recipientName,
     amount: appointmentFee,
     currency,
     bookingRef,
   });
+
+  const upiUri = `upi://pay?${upiQuery}`;
+  const gpayUri = `gpay://upi/pay?${upiQuery}`;
+  const phonepeUri = `phonepe://pay?${upiQuery}`;
+  const paytmUri = `paytmmp://pay?${upiQuery}`;
 
   const qrCodeDataUrl = await generateUpiQrCode(upiUri);
 
@@ -156,6 +167,10 @@ export async function createVerifiedUpiPayment(
     currency,
     bookingRef,
     upiUri,
+    upiQuery,
+    gpayUri,
+    phonepeUri,
+    paytmUri,
     qrCodeDataUrl,
   };
 }

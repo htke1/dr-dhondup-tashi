@@ -9,7 +9,8 @@ export const APP_CONFIG = {
   /** Doctor information */
   doctor: {
     name: "Dr. Dhondup Tashi",
-    shortName: "Dr. Dhondup Tashi",
+    heroName: "Dr. Dhun Tash",
+    shortName: "Dr. Dhun Tash",
     title: "MBBS, M.Med (Family Medicine)",
     role: "General Physician | Clinical Sonologist | Chief Medical Officer | Community Health Advocate",
     experience: "Years of Clinical Practice",
@@ -21,6 +22,11 @@ export const APP_CONFIG = {
 
   /** Clinical consultation expertise */
   consultationServices: [
+    {
+      title: "General Medical & Chronic Disease Management",
+      description: "Evidence-based clinical care for multi-system conditions, elderly care, and persistent symptoms.",
+      category: "Primary Care",
+    },
     {
       title: "Full Body Check-ups & Preventive Healthcare",
       description: "Comprehensive health evaluations, routine risk screening, and proactive wellness guidance.",
@@ -52,11 +58,6 @@ export const APP_CONFIG = {
       category: "Minor Surgery",
     },
     {
-      title: "General Medical & Chronic Disease Management",
-      description: "Evidence-based clinical care for multi-system conditions, elderly care, and persistent symptoms.",
-      category: "Primary Care",
-    },
-    {
       title: "Ultrasound (USG) Report Interpretation",
       description: "Expert secondary analysis of abdominal, pelvic, and general sonography scans by a certified sonologist.",
       category: "Sonology",
@@ -71,7 +72,7 @@ export const APP_CONFIG = {
   /** Application branding */
   site: {
     name: "Dr. Dhondup Tashi | Online Medical Consultations",
-    tagline: "Thoughtful, evidence-based medical care — wherever you are.",
+    tagline: "Dedicated online consulation for Ladakhi, Tibetan, Lahaut-Spiti and Monpa communities.",
     url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   },
 
@@ -79,10 +80,10 @@ export const APP_CONFIG = {
   timezone: "Asia/Kolkata" as const,
 
   /** Consultation fee in INR */
-  consultationFee: 800,
-  consultationFeeINR: 800,
+  consultationFee: 850,
+  consultationFeeINR: 850,
   /** Human-readable fee string */
-  consultationFeeDisplay: "₹800",
+  consultationFeeDisplay: "₹850",
 
   /** Payment Gateway & UPI Configuration */
   payment: {
@@ -95,15 +96,15 @@ export const APP_CONFIG = {
     },
   },
 
-  /** Family Head & Father Health Initiative (50% Clinical Subsidy) */
+  /** Family Head & Father Health Initiative (Clinical Subsidy) */
   familyHeadSubsidy: {
     enabled: true,
-    discountPercent: 50,
-    fee: 400,
-    feeDisplay: "₹400",
+    discountPercent: 41,
+    fee: 500,
+    feeDisplay: "₹500",
     name: "Family Head & Father Health Initiative",
     rationale:
-      "Dr. Dhondup Tashi's clinical observation through years of practice: Fathers and family heads frequently delay medical attention until illnesses reach late stages. We offer this 50% clinical subsidy to encourage early diagnosis and timely care.",
+      "Dr. Dhondup Tashi's clinical observation through years of practice: Fathers and family heads frequently delay medical attention until illnesses reach late stages. We offer this clinical subsidy to encourage early diagnosis and timely care.",
   },
 
   /** First Consultation Complimentary Initiative (100% Free / ₹0) */
@@ -117,11 +118,14 @@ export const APP_CONFIG = {
     termsNote: "Valid once per patient. Verified seamlessly against patient name and contact details.",
   },
 
-  /** Daily appointment slots (times in HH:mm, 24-hour, Asia/Kolkata) */
+  /** Daily appointment slots (times in HH:mm, 24-hour, Asia/Kolkata) - 6 slots from 6:30 PM to 8:30 PM */
   slots: [
-    { id: "19:00", startHHmm: "19:00", endHHmm: "19:20", label: "7:00 PM – 7:20 PM" },
-    { id: "19:20", startHHmm: "19:20", endHHmm: "19:40", label: "7:20 PM – 7:40 PM" },
-    { id: "19:40", startHHmm: "19:40", endHHmm: "20:00", label: "7:40 PM – 8:00 PM" },
+    { id: "18:30", startHHmm: "18:30", endHHmm: "18:50", label: "6:30 PM – 6:50 PM" },
+    { id: "18:50", startHHmm: "18:50", endHHmm: "19:10", label: "6:50 PM – 7:10 PM" },
+    { id: "19:10", startHHmm: "19:10", endHHmm: "19:30", label: "7:10 PM – 7:30 PM" },
+    { id: "19:30", startHHmm: "19:30", endHHmm: "19:50", label: "7:30 PM – 7:50 PM" },
+    { id: "19:50", startHHmm: "19:50", endHHmm: "20:10", label: "7:50 PM – 8:10 PM" },
+    { id: "20:10", startHHmm: "20:10", endHHmm: "20:30", label: "8:10 PM – 8:30 PM" },
   ],
 
   /** Same-day booking cutoff (HH:mm, 24-hour, Asia/Kolkata) */

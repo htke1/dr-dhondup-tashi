@@ -47,12 +47,18 @@ export interface SlotAvailability {
 }
 
 /**
- * Base slots available every day.
+ * Base slots available every day (6 daily slots from 6:30 PM to 8:30 PM IST).
  */
-export const DAILY_SLOTS: { slotTime: "19:00" | "19:20" | "19:40"; displayTime: string }[] = [
-  { slotTime: "19:00", displayTime: "7:00 PM IST" },
-  { slotTime: "19:20", displayTime: "7:20 PM IST" },
-  { slotTime: "19:40", displayTime: "7:40 PM IST" },
+export const DAILY_SLOTS: {
+  slotTime: "18:30" | "18:50" | "19:10" | "19:30" | "19:50" | "20:10";
+  displayTime: string;
+}[] = [
+  { slotTime: "18:30", displayTime: "6:30 PM IST" },
+  { slotTime: "18:50", displayTime: "6:50 PM IST" },
+  { slotTime: "19:10", displayTime: "7:10 PM IST" },
+  { slotTime: "19:30", displayTime: "7:30 PM IST" },
+  { slotTime: "19:50", displayTime: "7:50 PM IST" },
+  { slotTime: "20:10", displayTime: "8:10 PM IST" },
 ];
 
 /**

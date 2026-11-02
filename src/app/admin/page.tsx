@@ -96,7 +96,7 @@ export default function AdminDashboardPage() {
   // Admin Reschedule Modal State
   const [selectedAppointmentForReschedule, setSelectedAppointmentForReschedule] = useState<AppointmentRecord | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState("");
-  const [rescheduleSlot, setRescheduleSlot] = useState("19:00");
+  const [rescheduleSlot, setRescheduleSlot] = useState("18:30");
   const [rescheduleReason, setRescheduleReason] = useState("");
   const [rescheduling, setRescheduling] = useState(false);
   const [rescheduleError, setRescheduleError] = useState<string | null>(null);
@@ -1095,7 +1095,7 @@ export default function AdminDashboardPage() {
                                 }}
                               >
                                 <FamilyHeadIcon size={14} />
-                                <span>Family Head Subsidy (₹{apt.consultation_fee || 400})</span>
+                                <span>Family Head Subsidy (₹{apt.consultation_fee || 500})</span>
                               </span>
                             )}
                           </div>
@@ -1746,9 +1746,12 @@ export default function AdminDashboardPage() {
                   className="input"
                   style={{ width: "100%", background: "#FFFFFF" }}
                 >
-                  <option value="19:00">7:00 PM – 7:20 PM IST</option>
-                  <option value="19:20">7:20 PM – 7:40 PM IST</option>
-                  <option value="19:40">7:40 PM – 8:00 PM IST</option>
+                  <option value="18:30">6:30 PM – 6:50 PM IST</option>
+                  <option value="18:50">6:50 PM – 7:10 PM IST</option>
+                  <option value="19:10">7:10 PM – 7:30 PM IST</option>
+                  <option value="19:30">7:30 PM – 7:50 PM IST</option>
+                  <option value="19:50">7:50 PM – 8:10 PM IST</option>
+                  <option value="20:10">8:10 PM – 8:30 PM IST</option>
                 </select>
               </div>
 

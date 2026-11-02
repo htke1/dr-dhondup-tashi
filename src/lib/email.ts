@@ -110,7 +110,7 @@ function wrapEmailTemplate(contentHtml: string): string {
                       ${APP_CONFIG.doctor.name}
                     </h1>
                     <p style="margin: 4px 0 0; font-size: 13px; color: #6E685F;">
-                      ${APP_CONFIG.doctor.title} · ${APP_CONFIG.doctor.hospital}
+                      Online Medical Consultations
                     </p>
                   </td>
                 </tr>
@@ -216,7 +216,7 @@ export async function sendBookingConfirmationEmail(data: BookingEmailData) {
       <h4 style="margin: 0 0 8px; font-size: 14px; color: #2D2A26;">How to Prepare:</h4>
       <ul style="margin: 0; padding-left: 20px;">
         <li>Please join <strong>3 to 5 minutes before ${timeStr}</strong>.</li>
-        <li>Have past prescriptions, lab tests, scans, or discharge summaries readily available.</li>
+        <li>Have past prescriptions, lab tests, scans, or discharge summaries ready as a clear picture (photo) or PDF file on your device.</li>
         <li>Ensure you are seated in a quiet room with sufficient lighting and stable internet.</li>
         <li>You will receive an automated reminder 24 hours prior to the consultation.</li>
       </ul>
