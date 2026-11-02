@@ -300,7 +300,6 @@ function StepDateSelect({
     );
     const istHour = istNow.getHours();
     const istMinute = istNow.getMinutes();
-    const pastCutoff = istHour > 18 || (istHour === 18 && istMinute >= 0);
 
     const generatedDays: { dateStr: string; label: string; subLabel: string; disabled: boolean; isOffDay?: boolean }[] = [];
 
@@ -311,7 +310,9 @@ function StepDateSelect({
       const isToday = i === 0;
       const dayContext = new Date(`${dateStr}T12:00:00+05:30`);
       const isMonday = dayContext.getDay() === 1;
-      const disabled = (isToday && pastCutoff) || isMonday;
+      const currentHHmm = `${String(istHour).padStart(2, "0")}:${String(istMinute).padStart(2, "0")}`;
+      const allSlotsPassedToday = currentHHmm >= "20:10";
+      const disabled = (isToday && allSlotsPassedToday) || isMonday;
       const label = isToday ? "Today" : d.toLocaleDateString("en-IN", { weekday: "short" });
       const subLabel = d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
       generatedDays.push({ dateStr, label, subLabel, disabled, isOffDay: isMonday });
@@ -331,7 +332,7 @@ function StepDateSelect({
         Select a date
       </h2>
       <p style={{ fontSize: "0.875rem", color: "var(--color-charcoal-soft)", marginBottom: "1.5rem" }}>
-        Same-day bookings close at 6:00 PM IST. Mondays are clinic weekly off.
+        Select a date to view available time slots in Indian Standard Time (IST). Mondays are clinic weekly off.
       </p>
 
       <div
@@ -1121,6 +1122,11 @@ function StepReview({
 
   // First Free Consultation Eligibility State
   const [isFirstFreeEligible, setIsFirstFreeEligible] = useState(false);
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
+  const isEffectiveFree = isFirstFreeEligible || appliedCoupon === "FREECONSULTATIONFORPOOR";
 
   useEffect(() => {
     let isCancelled = false;
@@ -1134,6 +1140,7 @@ function StepReview({
             phone: patient.mobileNumber,
             email: patient.emailAddress,
             isFamilyHeadDiscount: !!patient.isFamilyHeadDiscount,
+          couponCode: appliedCoupon || undefined,
           }),
         });
         const data = await res.json();
@@ -1504,8 +1511,28 @@ function StepReview({
     { label: "Time", value: `${slot.slotLabel} IST` },
     { label: "Duration", value: `${APP_CONFIG.appointmentDurationMinutes} minutes` },
     { label: "Format", value: "Online via Google Meet" },
-    ...(isFirstFreeEligible
+    ...(appliedCoupon === "FREECONSULTATIONFORPOOR"
       ? [
+          { label: "Standard fee", value: APP_CONFIG.consultationFeeDisplay },
+          {
+            label: "Community Coupon (100% Off)",
+            value: (
+              <span style={{ color: "#065F46", fontWeight: 600 }}>
+                -{APP_CONFIG.consultationFeeDisplay} (FREECONSULTATIONFORPOOR)
+              </span>
+            ),
+          },
+          {
+            label: "Total payable",
+            value: (
+              <span style={{ fontSize: "1.1rem", fontWeight: 700, color: "#065F46" }}>
+                FREE (₹0)
+              </span>
+            ),
+          },
+        ]
+      : isFirstFreeEligible
+        ? [
         { label: "Standard fee", value: APP_CONFIG.consultationFeeDisplay },
         {
           label: "Introductory Offer",
@@ -2557,6 +2584,88 @@ function StepReview({
         </p>
       </div>
 
+      
+      {/* Coupon / Promo Code Box */}
+      <div
+        style={{
+          background: "var(--color-cream)",
+          border: "1.5px dashed var(--color-border-soft)",
+          borderRadius: "var(--radius-md)",
+          padding: "1rem 1.15rem",
+          marginBottom: "1.25rem",
+        }}
+      >
+        <div style={{ fontSize: "0.825rem", fontWeight: 600, color: "var(--color-charcoal)", marginBottom: "0.5rem" }}>
+          Have a promotional or community coupon code?
+        </div>
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <input
+            type="text"
+            placeholder="Enter coupon code (e.g. FREECONSULTATIONFORPOOR)"
+            value={couponInput}
+            onChange={(e) => {
+              setCouponInput(e.target.value);
+              setCouponError(null);
+            }}
+            disabled={!!appliedCoupon}
+            style={{
+              flex: 1,
+              padding: "0.55rem 0.85rem",
+              borderRadius: "var(--radius-sm)",
+              border: "1px solid var(--color-border)",
+              fontSize: "0.85rem",
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              fontWeight: 600,
+              background: appliedCoupon ? "rgba(16, 185, 129, 0.08)" : "#FFFFFF",
+            }}
+          />
+          {appliedCoupon ? (
+            <button
+              type="button"
+              onClick={() => {
+                setAppliedCoupon(null);
+                setCouponInput("");
+                setCouponError(null);
+              }}
+              className="btn btn-secondary btn-sm"
+              style={{ padding: "0.5rem 0.85rem", fontSize: "0.8rem", color: "#B91C1C", borderColor: "#FCA5A5" }}
+            >
+              Remove
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                const code = couponInput.trim().toUpperCase();
+                if (code === "FREECONSULTATIONFORPOOR") {
+                  setAppliedCoupon(code);
+                  setCouponError(null);
+                } else if (!code) {
+                  setCouponError("Please enter a coupon code");
+                } else {
+                  setCouponError("Invalid or expired coupon code");
+                }
+              }}
+              className="btn btn-secondary btn-sm"
+              style={{ padding: "0.5rem 1rem", fontSize: "0.8rem", fontWeight: 700 }}
+            >
+              Apply
+            </button>
+          )}
+        </div>
+        {appliedCoupon && (
+          <div style={{ marginTop: "0.5rem", fontSize: "0.8rem", color: "#065F46", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.35rem" }}>
+            <span>✓</span> Coupon <strong>FREECONSULTATIONFORPOOR</strong> applied: 100% Free Community Consultation (₹0).
+          </div>
+        )}
+        {couponError && (
+          <div style={{ marginTop: "0.5rem", fontSize: "0.8rem", color: "#DC2626" }}>
+            {couponError}
+          </div>
+        )}
+      </div>
+
       {errorMsg && (
         <div
           style={{
@@ -2590,24 +2699,19 @@ function StepReview({
         style={{
           width: "100%",
           justifyContent: "center",
-          background: isFirstFreeEligible ? "#059669" : undefined,
-          borderColor: isFirstFreeEligible ? "#047857" : undefined,
+          background: isEffectiveFree ? "#059669" : undefined,
+          borderColor: isEffectiveFree ? "#047857" : undefined,
         }}
         onClick={handleProceedToPayment}
         disabled={submitting}
         id="pay-btn"
       >
-        {submitting
-          ? isFirstFreeEligible
-            ? "Confirming your free consultation..."
-            : "Generating payment request..."
-          : isFirstFreeEligible
-            ? "Confirm Free Consultation (₹0)"
+        {submitting ? isEffectiveFree ? "Confirming your free consultation..." : "Generating payment request..." : isEffectiveFree ? "Confirm Free Consultation (₹0)"
             : APP_CONFIG.payment.mode === "upi_qr"
               ? `Proceed to Pay via UPI QR — ${patient.isFamilyHeadDiscount ? APP_CONFIG.familyHeadSubsidy.feeDisplay : APP_CONFIG.consultationFeeDisplay}`
               : `Proceed to Payment — ${patient.isFamilyHeadDiscount ? APP_CONFIG.familyHeadSubsidy.feeDisplay : APP_CONFIG.consultationFeeDisplay}`}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-          {isFirstFreeEligible ? (
+          {isEffectiveFree ? (
             <polyline points="20 6 9 17 4 12" />
           ) : (
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -2626,7 +2730,7 @@ function StepReview({
           gap: "0.375rem",
         }}
       >
-        {isFirstFreeEligible ? (
+        {isEffectiveFree ? (
           <span>🎉 Zero payment required · Direct Google Meet invite dispatched to your email</span>
         ) : (
           <>

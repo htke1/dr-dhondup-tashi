@@ -34,11 +34,14 @@ export async function POST(request: NextRequest) {
       isFamilyHeadDiscount,
       appointmentDate,
       slotTime,
+      couponCode,
     } = parseResult.data;
+
+    const isCouponFree = couponCode?.trim().toUpperCase() === "FREECONSULTATIONFORPOOR";
 
     // 2. Server-side check for First Free Consultation
     const eligibility = await checkFirstConsultationEligibility(name, phone, email);
-    const isFirstFree = eligibility.isFirstFree;
+    const isFirstFree = eligibility.isFirstFree || isCouponFree;
 
     const consultationFee = isFirstFree
       ? 0
@@ -216,9 +219,10 @@ export async function POST(request: NextRequest) {
         console.error("Google Calendar creation warning for free consultation:", calErr);
       }
 
+      const couponTag = isCouponFree ? "[Coupon: FREECONSULTATIONFORPOOR (100% Free)] " : "";
       const reasonTag = isFamilyHeadDiscount
-        ? `[Family Head / Father Initiative] [1st Free Consultation] ${reason || ""}`.trim()
-        : `[1st Free Consultation] ${reason || ""}`.trim();
+        ? `[Family Head / Father Initiative] ${couponTag}${reason || ""}`.trim()
+        : `${couponTag}${isFirstFree && !isCouponFree ? "[1st Free Consultation] " : ""}${reason || ""}`.trim();
 
       const insertPayload: any = {
         id: appointmentUuid,

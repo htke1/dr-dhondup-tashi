@@ -13,7 +13,7 @@ export async function PATCH(
 
   const { id: appointmentId } = await params;
   const body = await request.json().catch(() => ({}));
-  const { status, cancellationReason } = body;
+  const { status, cancellationReason, googleMeetLink } = body;
 
   const validStatuses = ["pending_payment", "confirmed", "completed", "cancelled"];
   if (status && !validStatuses.includes(status)) {
@@ -28,6 +28,7 @@ export async function PATCH(
 
     const updatePayload: Record<string, any> = {};
     if (status) updatePayload.status = status;
+    if (googleMeetLink !== undefined) updatePayload.google_meet_link = googleMeetLink;
     if (status === "cancelled") {
       updatePayload.cancelled_at = new Date().toISOString();
       if (cancellationReason) updatePayload.cancellation_reason = cancellationReason;

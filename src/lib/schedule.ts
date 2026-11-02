@@ -30,13 +30,28 @@ export function isTodayInIST(dateStr: string): boolean {
 }
 
 /**
- * Check if same-day booking cutoff (6:00 PM IST) has passed for today.
+ * Format current time in IST to HH:mm string.
+ */
+export function getNowHHmmInIST(): string {
+  const istNow = getNowInIST();
+  const hours = String(istNow.getHours()).padStart(2, "0");
+  const minutes = String(istNow.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+/**
+ * Check if a slot time has already passed today in IST.
+ */
+export function isSlotInPastToday(slotTime: string): boolean {
+  return getNowHHmmInIST() >= slotTime;
+}
+
+/**
+ * Check if all daily slots have passed for today in IST.
  */
 export function isSameDayCutoffPassed(): boolean {
-  const istNow = getNowInIST();
-  const hours = istNow.getHours();
-  const minutes = istNow.getMinutes();
-  return hours > APP_CONFIG.sameDayCutoffHour || (hours === APP_CONFIG.sameDayCutoffHour && minutes >= 0);
+  const lastSlot = DAILY_SLOTS[DAILY_SLOTS.length - 1].slotTime;
+  return getNowHHmmInIST() >= lastSlot;
 }
 
 export interface SlotAvailability {
@@ -65,7 +80,6 @@ export const DAILY_SLOTS: {
  * Check if a given date string (YYYY-MM-DD) is Monday in IST (Doctor's weekly off day).
  */
 export function isMondayInIST(dateStr: string): boolean {
-  // Parse date in IST context
   const date = new Date(`${dateStr}T12:00:00+05:30`);
   return date.getDay() === 1; // 1 = Monday
 }
@@ -95,11 +109,11 @@ export function validateBookingTiming(dateStr: string, slotTime: string): { vali
     return { valid: false, error: `Appointments can only be booked up to ${APP_CONFIG.maxBookingAdvanceDays} days in advance.` };
   }
 
-  // 4. Check 6:00 PM IST same-day cutoff
-  if (dateStr === todayStr && isSameDayCutoffPassed()) {
+  // 4. Same-day booking check: allowed as long as current time is earlier than the slot start time
+  if (dateStr === todayStr && isSlotInPastToday(slotTime)) {
     return {
       valid: false,
-      error: "Bookings for today closed at 6:00 PM IST. Please select a future date.",
+      error: "This slot time has already passed today. Please select an upcoming slot.",
     };
   }
 

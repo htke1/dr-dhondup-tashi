@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DAILY_SLOTS, getNowInIST, formatDateToISTString, isSameDayCutoffPassed, isMondayInIST, validateBookingTiming } from "@/lib/schedule";
+import { DAILY_SLOTS, getNowInIST, formatDateToISTString, isSameDayCutoffPassed, isMondayInIST, isSlotInPastToday, validateBookingTiming } from "@/lib/schedule";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 
 export async function GET(request: NextRequest) {
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   const isPast = dateStr < todayStr;
   const isCutoff = isToday && isSameDayCutoffPassed();
 
-  // If date is Monday (weekly off)
+  // If date is Monday (weekly off) - unblocked locally
   if (isMonday) {
     const slots = DAILY_SLOTS.map((s) => ({
       slotTime: s.slotTime,
@@ -37,19 +37,19 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // If date is completely invalid (past date, cutoff passed, or beyond 14 days)
+  // If date is completely invalid (past date or all slots for today have passed)
   if (isPast || isCutoff) {
     const slots = DAILY_SLOTS.map((s) => ({
       slotTime: s.slotTime,
       displayTime: s.displayTime,
       available: false,
-      reason: isPast ? "Date is in the past" : "Same-day booking closed at 6:00 PM IST",
+      reason: isPast ? "Date is in the past" : "All slots for today have passed",
     }));
 
     return NextResponse.json({
       date: dateStr,
       isAvailable: false,
-      reason: isPast ? "Past date" : "Same-day booking cutoff passed",
+      reason: isPast ? "Past date" : "All slots for today have passed",
       slots,
     });
   }
@@ -109,12 +109,23 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    const slots = DAILY_SLOTS.map((s) => ({
-      slotTime: s.slotTime,
-      displayTime: s.displayTime,
-      available: !takenSlots.has(s.slotTime),
-      reason: takenSlots.has(s.slotTime) ? "Slot already booked or reserved" : undefined,
-    }));
+    const slots = DAILY_SLOTS.map((s) => {
+      const isTaken = takenSlots.has(s.slotTime);
+      const isPassedToday = isToday && isSlotInPastToday(s.slotTime);
+      const available = !isTaken && !isPassedToday;
+      let reason: string | undefined = undefined;
+      if (isPassedToday) {
+        reason = "Time slot has passed";
+      } else if (isTaken) {
+        reason = "Slot already booked or reserved";
+      }
+      return {
+        slotTime: s.slotTime,
+        displayTime: s.displayTime,
+        available,
+        reason,
+      };
+    });
 
     return NextResponse.json({
       date: dateStr,
@@ -126,15 +137,19 @@ export async function GET(request: NextRequest) {
     // log clearly and return timing-validated slots with a mock note.
     console.warn("Supabase not configured or unreachable. Operating in development fallback mode.");
     
-    const slots = DAILY_SLOTS.map((s) => ({
-      slotTime: s.slotTime,
-      displayTime: s.displayTime,
-      available: true,
-    }));
+    const slots = DAILY_SLOTS.map((s) => {
+      const isPassedToday = isToday && isSlotInPastToday(s.slotTime);
+      return {
+        slotTime: s.slotTime,
+        displayTime: s.displayTime,
+        available: !isPassedToday,
+        reason: isPassedToday ? "Time slot has passed" : undefined,
+      };
+    });
 
     return NextResponse.json({
       date: dateStr,
-      isAvailable: true,
+      isAvailable: slots.some((s) => s.available),
       developmentNote: "Database not connected; showing default open schedule.",
       slots,
     });

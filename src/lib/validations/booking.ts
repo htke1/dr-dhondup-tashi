@@ -38,6 +38,7 @@ export const createBookingHoldSchema = patientFormSchema.extend({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Appointment date must be in YYYY-MM-DD format"),
   slotTime: z.enum(["18:30", "18:50", "19:10", "19:30", "19:50", "20:10"]),
+  couponCode: z.string().trim().optional(),
 });
 
 export type PatientFormValues = z.infer<typeof patientFormSchema>;

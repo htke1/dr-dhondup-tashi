@@ -1,4 +1,4 @@
-﻿import { Resend } from "resend";
+import { Resend } from "resend";
 import { APP_CONFIG } from "./config";
 
 interface BookingEmailData {
@@ -678,7 +678,6 @@ Date: ${dateStr}
 Patient: ${data.patientName}
 ${data.patientAge ? `Age: ${data.patientAge}\n` : ""}${data.patientPhone ? `Phone: ${data.patientPhone}\n` : ""}
 Doctor: ${APP_CONFIG.doctor.name}
-Qualifications: ${APP_CONFIG.doctor.title}
 KMC Registration No.: ${APP_CONFIG.doctor.kmcRegistration || "1,05,969"}
 
 --------------------------------------------------
@@ -699,10 +698,7 @@ KMC Registration No.: ${APP_CONFIG.doctor.kmcRegistration || "1,05,969"}
           <h2 style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; color: #7B2D3E; font-weight: 700;">
             ${APP_CONFIG.doctor.name}
           </h2>
-          <p style="margin: 3px 0 0; font-size: 13px; color: #555;">
-            ${APP_CONFIG.doctor.title} &middot; Family Physician
-          </p>
-          <p style="margin: 2px 0 0; font-size: 12px; color: #777;">
+          <p style="margin: 4px 0 0; font-size: 12px; color: #777;">
             KMC Registration No.: <strong>${APP_CONFIG.doctor.kmcRegistration || "1,05,969"}</strong>
           </p>
         </td>

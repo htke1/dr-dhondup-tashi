@@ -73,7 +73,10 @@ function getSlotTimestamps(date: string, slotTime: string) {
 export async function createGoogleCalendarEvent(
   params: CalendarEventParams
 ): Promise<CalendarEventResult> {
-  const fallbackMeetLink = `https://meet.google.com/drt-consult-${params.appointmentId.slice(0, 8)}`;
+  const fallbackMeetLink =
+    process.env.DEFAULT_GOOGLE_MEET_LINK ||
+    process.env.NEXT_PUBLIC_DEFAULT_MEET_LINK ||
+    `https://meet.google.com/rdp-virk-ngo`;
 
   if (!isGoogleCalendarConfigured()) {
     console.warn(
