@@ -776,10 +776,16 @@ ${data.prescriptionNotes}
             <p style="margin: 0 0 6px; font-size: 12px; color: #4A4640;">
               KMC Registration No.: <strong>${APP_CONFIG.doctor.kmcRegistration || "1,05,969"}</strong>
             </p>
-            <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 12px; font-style: italic; color: #6E685F;">Electronic signature:</span>
-              <img src="${signatureImgUrl}" alt="Dr. Dhondup Tashi Signature" width="120" style="max-height: 52px; width: auto; max-width: 130px; display: inline-block; vertical-align: middle; border: 0;" />
-            </div>
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top: 4px; border-collapse: collapse;">
+              <tr>
+                <td style="vertical-align: middle; padding-right: 8px; white-space: nowrap;">
+                  <span style="font-size: 12px; font-style: italic; color: #6E685F;">Electronic signature:</span>
+                </td>
+                <td style="vertical-align: middle; line-height: 1;">
+                  <img src="${signatureImgUrl}" alt="Dr. Dhondup Tashi Signature" width="105" style="max-height: 44px; width: auto; max-width: 115px; display: block; margin-top: -6px; border: 0;" />
+                </td>
+              </tr>
+            </table>
           </div>
         </td>
       </tr>
