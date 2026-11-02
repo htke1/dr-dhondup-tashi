@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Central application configuration.
  * All business-critical settings live here so they are never scattered
  * across components.  Database-backed settings will supersede these
@@ -9,8 +9,8 @@ export const APP_CONFIG = {
   /** Doctor information */
   doctor: {
     name: "Dr. Dhondup Tashi",
-    heroName: "Dr. Dhun Tash",
-    shortName: "Dr. Dhun Tash",
+    heroName: "Dr. Dhun Tashi",
+    shortName: "Dr. Dhun Tashi",
     title: "MBBS, M.Med (Family Medicine)",
     role: "Family Physician | Clinical Sonologist | Chief Medical Officer | Community Health Advocate",
     experience: "Years of Clinical Practice",

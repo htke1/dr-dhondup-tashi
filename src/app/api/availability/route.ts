@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { DAILY_SLOTS, getNowInIST, formatDateToISTString, isSameDayCutoffPassed, validateBookingTiming } from "@/lib/schedule";
+import { DAILY_SLOTS, getNowInIST, formatDateToISTString, isSameDayCutoffPassed, isMondayInIST, validateBookingTiming } from "@/lib/schedule";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 
 export async function GET(request: NextRequest) {
@@ -13,11 +13,29 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const isMonday = isMondayInIST(dateStr);
   const timingValidation = validateBookingTiming(dateStr, "18:30");
   const todayStr = formatDateToISTString(new Date());
   const isToday = dateStr === todayStr;
   const isPast = dateStr < todayStr;
   const isCutoff = isToday && isSameDayCutoffPassed();
+
+  // If date is Monday (weekly off)
+  if (isMonday) {
+    const slots = DAILY_SLOTS.map((s) => ({
+      slotTime: s.slotTime,
+      displayTime: s.displayTime,
+      available: false,
+      reason: "Mondays are the doctor's weekly off day",
+    }));
+
+    return NextResponse.json({
+      date: dateStr,
+      isAvailable: false,
+      reason: "Doctor's weekly off day (Monday)",
+      slots,
+    });
+  }
 
   // If date is completely invalid (past date, cutoff passed, or beyond 14 days)
   if (isPast || isCutoff) {

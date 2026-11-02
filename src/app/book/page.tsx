@@ -290,7 +290,7 @@ function StepDateSelect({
   onDateSelect: (d: string) => void;
   onNext: () => void;
 }) {
-  const [days, setDays] = useState<{ dateStr: string; label: string; subLabel: string; disabled: boolean }[]>([]);
+  const [days, setDays] = useState<{ dateStr: string; label: string; subLabel: string; disabled: boolean; isOffDay?: boolean }[]>([]);
 
   useEffect(() => {
     // Generate next 14 days (excluding today if past 6 PM IST)
@@ -309,10 +309,12 @@ function StepDateSelect({
       d.setDate(d.getDate() + i);
       const dateStr = d.toISOString().split("T")[0];
       const isToday = i === 0;
-      const disabled = isToday && pastCutoff;
+      const dayContext = new Date(`${dateStr}T12:00:00+05:30`);
+      const isMonday = dayContext.getDay() === 1;
+      const disabled = (isToday && pastCutoff) || isMonday;
       const label = isToday ? "Today" : d.toLocaleDateString("en-IN", { weekday: "short" });
       const subLabel = d.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
-      generatedDays.push({ dateStr, label, subLabel, disabled });
+      generatedDays.push({ dateStr, label, subLabel, disabled, isOffDay: isMonday });
     }
     setDays(generatedDays);
   }, []);
@@ -329,7 +331,7 @@ function StepDateSelect({
         Select a date
       </h2>
       <p style={{ fontSize: "0.875rem", color: "var(--color-charcoal-soft)", marginBottom: "1.5rem" }}>
-        Same-day bookings close at 6:00 PM IST.
+        Same-day bookings close at 6:00 PM IST. Mondays are clinic weekly off.
       </p>
 
       <div
@@ -342,13 +344,13 @@ function StepDateSelect({
           marginBottom: "1.75rem",
         }}
       >
-        {days.map(({ dateStr, label, subLabel, disabled }) => (
+        {days.map(({ dateStr, label, subLabel, disabled, isOffDay }) => (
           <button
             key={dateStr}
             onClick={() => !disabled && onDateSelect(dateStr)}
             disabled={disabled}
             aria-pressed={selectedDate === dateStr}
-            aria-label={`${label} ${subLabel}`}
+            aria-label={`${label} ${subLabel}${isOffDay ? " (Weekly Off)" : ""}`} title={isOffDay ? "Doctor weekly off day" : undefined}
             style={{
               padding: "0.75rem 0.5rem",
               border: "1.5px solid",

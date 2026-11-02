@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -75,7 +75,7 @@ export default function SiteFooter() {
                 textDecoration: "none",
                 marginBottom: "1rem",
               }}
-              aria-label="Follow Dr. Dhun Tash on Instagram"
+              aria-label="Follow Dr. Dhun Tashi on Instagram"
             >
               {/* Instagram icon */}
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -191,7 +191,7 @@ export default function SiteFooter() {
               Consultation Hours
             </h3>
             <p style={{ fontSize: "0.875rem", lineHeight: 1.75 }}>
-              Daily consultations via Google Meet
+              Tuesday – Sunday via Google Meet (Mondays Off)
               <br />
               6:30 PM – 8:30 PM IST
               <br />

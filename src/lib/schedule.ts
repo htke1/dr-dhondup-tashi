@@ -62,18 +62,32 @@ export const DAILY_SLOTS: {
 ];
 
 /**
+ * Check if a given date string (YYYY-MM-DD) is Monday in IST (Doctor's weekly off day).
+ */
+export function isMondayInIST(dateStr: string): boolean {
+  // Parse date in IST context
+  const date = new Date(`${dateStr}T12:00:00+05:30`);
+  return date.getDay() === 1; // 1 = Monday
+}
+
+/**
  * Validates whether a booking request for a given date and slot complies with business timing rules.
  */
 export function validateBookingTiming(dateStr: string, slotTime: string): { valid: boolean; error?: string } {
   const istNow = getNowInIST();
   const todayStr = formatDateToISTString(new Date());
 
-  // 1. Check if date is in the past
+  // 1. Check if date is Monday (weekly off day)
+  if (isMondayInIST(dateStr)) {
+    return { valid: false, error: "Mondays are the doctor's weekly off day. Please select another day." };
+  }
+
+  // 2. Check if date is in the past
   if (dateStr < todayStr) {
     return { valid: false, error: "Cannot book appointments for past dates." };
   }
 
-  // 2. Check 14-day advance limit
+  // 3. Check 14-day advance limit
   const maxDate = new Date(istNow);
   maxDate.setDate(maxDate.getDate() + APP_CONFIG.maxBookingAdvanceDays);
   const maxDateStr = formatDateToISTString(maxDate);
@@ -81,7 +95,7 @@ export function validateBookingTiming(dateStr: string, slotTime: string): { vali
     return { valid: false, error: `Appointments can only be booked up to ${APP_CONFIG.maxBookingAdvanceDays} days in advance.` };
   }
 
-  // 3. Check 6:00 PM IST same-day cutoff
+  // 4. Check 6:00 PM IST same-day cutoff
   if (dateStr === todayStr && isSameDayCutoffPassed()) {
     return {
       valid: false,
@@ -89,7 +103,7 @@ export function validateBookingTiming(dateStr: string, slotTime: string): { vali
     };
   }
 
-  // 4. Validate slot time format
+  // 5. Validate slot time format
   const validSlot = DAILY_SLOTS.some((s) => s.slotTime === slotTime);
   if (!validSlot) {
     return { valid: false, error: "Invalid slot time selected." };

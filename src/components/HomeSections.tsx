@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import Image from "next/image";
 import { APP_CONFIG } from "@/lib/config";
 import FamilyHeadIcon from "@/components/FamilyHeadIcon";
@@ -89,7 +89,7 @@ export function HeroSection() {
                     margin: 0,
                     letterSpacing: "-0.01em",
                   }}>
-                    Dr. Dhun Tash
+                    Dr. Dhun Tashi
                   </p>
                 </div>
                 {/* Instagram pill */}
@@ -134,7 +134,7 @@ export function HeroSection() {
               className="hero-heading hero-heading-desktop"
               style={{ marginBottom: "0.5rem", color: "var(--color-charcoal)", lineHeight: 1.15 }}
             >
-              Dr. Dhun Tash
+              Dr. Dhun Tashi
             </h1>
 
             {/* Sub-role line */}
@@ -301,7 +301,7 @@ export function HeroSection() {
               >
                 <div>
                   <p style={{ fontFamily: "var(--font-serif)", fontWeight: 600, fontSize: "0.95rem", color: "var(--color-maroon)", margin: 0 }}>
-                    Dr. Dhun Tash
+                    Dr. Dhun Tashi
                   </p>
                   <p style={{ fontSize: "0.75rem", color: "var(--color-charcoal-soft)", margin: "0.15rem 0 0 0" }}>
                     Chief Medical Officer &middot; Gaden Jangtse Hospital
@@ -319,7 +319,7 @@ export function HeroSection() {
                     textDecoration: "none",
                     flexShrink: 0,
                   }}
-                  aria-label="Follow Dr. Dhun Tash on Instagram"
+                  aria-label="Follow Dr. Dhun Tashi on Instagram"
                 >
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <defs>
@@ -995,7 +995,7 @@ export function AboutSection() {
                 rel="noopener noreferrer"
                 className="btn btn-secondary btn-sm"
                 style={{ flexShrink: 0, fontSize: "0.8rem", padding: "0.35rem 0.8rem" }}
-                aria-label="Follow Dr. Dhun Tash on Instagram"
+                aria-label="Follow Dr. Dhun Tashi on Instagram"
               >
                 Follow →
               </a>
