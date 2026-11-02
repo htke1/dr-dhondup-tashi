@@ -106,6 +106,17 @@ export const APP_CONFIG = {
       "Dr. Dhondup Tashi's clinical observation through years of practice: Fathers and family heads frequently delay medical attention until illnesses reach late stages. We offer this 50% clinical subsidy to encourage early diagnosis and timely care.",
   },
 
+  /** First Consultation Complimentary Initiative (100% Free / ₹0) */
+  firstConsultationFree: {
+    enabled: true,
+    fee: 0,
+    feeDisplay: "FREE (₹0)",
+    badgeText: "1st Consultation Complimentary",
+    name: "Introductory Consultation Offer",
+    description: "Dr. Dhondup Tashi is pleased to offer your first introductory consultation free of charge.",
+    termsNote: "Valid once per patient. Verified seamlessly against patient name and contact details.",
+  },
+
   /** Daily appointment slots (times in HH:mm, 24-hour, Asia/Kolkata) */
   slots: [
     { id: "19:00", startHHmm: "19:00", endHHmm: "19:20", label: "7:00 PM – 7:20 PM" },

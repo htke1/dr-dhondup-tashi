@@ -13,6 +13,8 @@ interface BookingEmailData {
   slotTime: string;         // "19:00"
   googleMeetLink: string;
   googleCalendarEventId?: string | null;
+  consultationFee?: number;
+  isFirstFree?: boolean;
 }
 
 interface RescheduleEmailData {
@@ -188,7 +190,9 @@ export async function sendBookingConfirmationEmail(data: BookingEmailData) {
       <tr>
         <td style="padding: 16px 20px;">
           <span style="font-size: 11px; text-transform: uppercase; color: #8C8479; letter-spacing: 0.05em; display: block;">Consultation Fee</span>
-          <span style="font-size: 14px; font-weight: 600; color: #2E7D32;">${APP_CONFIG.consultationFeeDisplay} (Paid)</span>
+          ${data.consultationFee === 0 || data.isFirstFree
+            ? `<span style="font-size: 14px; font-weight: 700; color: #065F46; background-color: #ECFDF5; padding: 3px 8px; border-radius: 4px; display: inline-block;">FREE (₹0 · 1st Consultation Complimentary)</span>`
+            : `<span style="font-size: 14px; font-weight: 600; color: #2E7D32;">${data.consultationFee ? `₹${data.consultationFee}` : APP_CONFIG.consultationFeeDisplay} (Paid)</span>`}
         </td>
       </tr>
     </table>
@@ -303,7 +307,9 @@ export async function sendDoctorNotificationEmail(data: BookingEmailData) {
       <tr>
         <td style="padding: 14px 18px; font-size: 13px;">
           <strong style="color: #6E685F; display: block; font-size: 11px; text-transform: uppercase;">Payment</strong>
-          <span style="color: #2E7D32; font-weight: 600;">${APP_CONFIG.consultationFeeDisplay} (Verified)</span>
+          ${data.consultationFee === 0 || data.isFirstFree
+            ? `<span style="color: #065F46; font-weight: 700; background-color: #ECFDF5; padding: 2px 8px; border-radius: 4px; display: inline-block;">🎁 1st Consultation Complimentary (₹0)</span>`
+            : `<span style="color: #2E7D32; font-weight: 600;">${data.consultationFee ? `₹${data.consultationFee}` : APP_CONFIG.consultationFeeDisplay} (Verified)</span>`}
         </td>
       </tr>
     </table>

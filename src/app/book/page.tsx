@@ -992,6 +992,40 @@ function StepReview({
   const [remainingSeconds, setRemainingSeconds] = useState(300);
   const [isTimedOut, setIsTimedOut] = useState(false);
 
+  // First Free Consultation Eligibility State
+  const [isFirstFreeEligible, setIsFirstFreeEligible] = useState(false);
+
+  useEffect(() => {
+    let isCancelled = false;
+    async function checkEligibility() {
+      try {
+        const res = await fetch("/api/appointments/check-eligibility", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: patient.fullName,
+            phone: patient.mobileNumber,
+            email: patient.emailAddress,
+            isFamilyHeadDiscount: !!patient.isFamilyHeadDiscount,
+          }),
+        });
+        const data = await res.json();
+        if (!isCancelled && res.ok && data.isFirstFree) {
+          setIsFirstFreeEligible(true);
+        }
+      } catch (err) {
+        console.warn("Eligibility check client warning:", err);
+      }
+    }
+
+    if (patient.fullName && (patient.mobileNumber || patient.emailAddress)) {
+      checkEligibility();
+    }
+    return () => {
+      isCancelled = true;
+    };
+  }, [patient.fullName, patient.mobileNumber, patient.emailAddress, patient.isFamilyHeadDiscount]);
+
   useEffect(() => {
     if (!upiPaymentData) {
       setRemainingSeconds(300);
@@ -1119,6 +1153,12 @@ function StepReview({
       const holdData = await holdRes.json();
       if (!holdRes.ok) {
         setErrorMsg(holdData.error || "Failed to reserve slot. Please choose another time.");
+        return;
+      }
+
+      // 1st Free Consultation: Immediate confirmation without payment!
+      if (holdData.isFirstFree && holdData.appointment) {
+        onConfirmed(holdData.appointment);
         return;
       }
 
@@ -1312,7 +1352,27 @@ function StepReview({
     { label: "Time", value: `${slot.slotLabel} IST` },
     { label: "Duration", value: `${APP_CONFIG.appointmentDurationMinutes} minutes` },
     { label: "Format", value: "Online via Google Meet" },
-    ...(patient.isFamilyHeadDiscount
+    ...(isFirstFreeEligible
+      ? [
+        { label: "Standard fee", value: APP_CONFIG.consultationFeeDisplay },
+        {
+          label: "Introductory Offer",
+          value: (
+            <span style={{ color: "#065F46", fontWeight: 600 }}>
+              -{APP_CONFIG.consultationFeeDisplay} (1st Consultation Complimentary)
+            </span>
+          ),
+        },
+        {
+          label: "Total payable",
+          value: (
+            <span style={{ fontSize: "1.1rem", fontWeight: 700, color: "#065F46" }}>
+              FREE (₹0)
+            </span>
+          ),
+        },
+      ]
+      : patient.isFamilyHeadDiscount
       ? [
         { label: "Standard fee", value: APP_CONFIG.consultationFeeDisplay },
         {
@@ -2038,9 +2098,34 @@ function StepReview({
         <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", marginBottom: "0.375rem" }}>
           Review your appointment
         </h2>
-        <p style={{ fontSize: "0.875rem", color: "var(--color-charcoal-soft)", marginBottom: "1.75rem" }}>
-          Please verify all details before proceeding to payment.
+        <p style={{ fontSize: "0.875rem", color: "var(--color-charcoal-soft)", marginBottom: "1.5rem" }}>
+          Please verify all details before confirming your consultation.
         </p>
+
+        {isFirstFreeEligible && (
+          <div
+            style={{
+              background: "linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)",
+              border: "1.5px solid #10B981",
+              borderRadius: "var(--radius-md)",
+              padding: "1rem 1.15rem",
+              marginBottom: "1.25rem",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.85rem",
+            }}
+          >
+            <div style={{ fontSize: "1.75rem", lineHeight: 1 }}>🎁</div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "#065F46" }}>
+                1st Consultation is Complimentary (₹0)!
+              </div>
+              <div style={{ fontSize: "0.8125rem", color: "#047857", lineHeight: 1.45, marginTop: "0.15rem" }}>
+                Dr. Dhondup Tashi is pleased to offer your first medical consultation free of charge. No payment or bank transfer required.
+              </div>
+            </div>
+          </div>
+        )}
 
         <dl style={{ display: "flex", flexDirection: "column", gap: "0" }}>
           {reviewRows.map((row, i) => (
@@ -2166,18 +2251,31 @@ function StepReview({
 
       <button
         className="btn btn-primary btn-lg"
-        style={{ width: "100%", justifyContent: "center" }}
+        style={{
+          width: "100%",
+          justifyContent: "center",
+          background: isFirstFreeEligible ? "#059669" : undefined,
+          borderColor: isFirstFreeEligible ? "#047857" : undefined,
+        }}
         onClick={handleProceedToPayment}
         disabled={submitting}
         id="pay-btn"
       >
         {submitting
-          ? "Generating payment request..."
-          : APP_CONFIG.payment.mode === "upi_qr"
-            ? `Proceed to Pay via UPI QR — ${patient.isFamilyHeadDiscount ? APP_CONFIG.familyHeadSubsidy.feeDisplay : APP_CONFIG.consultationFeeDisplay}`
-            : `Proceed to Payment — ${patient.isFamilyHeadDiscount ? APP_CONFIG.familyHeadSubsidy.feeDisplay : APP_CONFIG.consultationFeeDisplay}`}
+          ? isFirstFreeEligible
+            ? "Confirming your free consultation..."
+            : "Generating payment request..."
+          : isFirstFreeEligible
+            ? "Confirm Free Consultation (₹0)"
+            : APP_CONFIG.payment.mode === "upi_qr"
+              ? `Proceed to Pay via UPI QR — ${patient.isFamilyHeadDiscount ? APP_CONFIG.familyHeadSubsidy.feeDisplay : APP_CONFIG.consultationFeeDisplay}`
+              : `Proceed to Payment — ${patient.isFamilyHeadDiscount ? APP_CONFIG.familyHeadSubsidy.feeDisplay : APP_CONFIG.consultationFeeDisplay}`}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          {isFirstFreeEligible ? (
+            <polyline points="20 6 9 17 4 12" />
+          ) : (
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          )}
         </svg>
       </button>
       <p
@@ -2192,13 +2290,19 @@ function StepReview({
           gap: "0.375rem",
         }}
       >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-        </svg>
-        {APP_CONFIG.payment.mode === "upi_qr"
-          ? "Official UPI QR Code · Clinic Administrator Verification"
-          : "Secure payment via Razorpay · Instant confirmation with Google Meet link"}
+        {isFirstFreeEligible ? (
+          <span>🎉 Zero payment required · Direct Google Meet invite dispatched to your email</span>
+        ) : (
+          <>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            {APP_CONFIG.payment.mode === "upi_qr"
+              ? "Official UPI QR Code · Instant Confirmation"
+              : "Secure payment via Razorpay · Instant confirmation with Google Meet link"}
+          </>
+        )}
       </p>
     </div>
   );
@@ -2587,10 +2691,12 @@ function StepConfirmed({
               fontWeight: 600,
               letterSpacing: "0.06em",
               textTransform: "uppercase",
-              color: "#2E7D32",
+              color: (appointment.consultation_fee === 0 || appointment.isFirstFree) ? "#065F46" : "#2E7D32",
             }}
           >
-            Payment Verified & Confirmed
+            {(appointment.consultation_fee === 0 || appointment.isFirstFree)
+              ? "🎁 1st Consultation Complimentary (₹0)"
+              : "Payment Verified & Confirmed"}
           </span>
           <h2
             style={{
@@ -2632,15 +2738,17 @@ function StepConfirmed({
           <span
             style={{
               display: "inline-block",
-              background: "#E8F5E9",
-              color: "#1B5E20",
+              background: (appointment.consultation_fee === 0 || appointment.isFirstFree) ? "#ECFDF5" : "#E8F5E9",
+              color: (appointment.consultation_fee === 0 || appointment.isFirstFree) ? "#065F46" : "#1B5E20",
               fontWeight: 600,
               fontSize: "0.75rem",
               padding: "0.25rem 0.625rem",
               borderRadius: "999px",
             }}
           >
-            Paid: {APP_CONFIG.consultationFeeDisplay}
+            {(appointment.consultation_fee === 0 || appointment.isFirstFree)
+              ? "Fee: FREE (₹0 · Waived)"
+              : `Paid: ₹${appointment.consultation_fee || APP_CONFIG.consultationFee}`}
           </span>
         </div>
       </div>

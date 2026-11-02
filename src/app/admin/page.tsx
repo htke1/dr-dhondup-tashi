@@ -1059,6 +1059,25 @@ export default function AdminDashboardPage() {
                                 🌐 {apt.preferred_language}
                               </span>
                             )}
+                            {(apt.consultation_fee === 0 || apt.reason_for_consultation?.includes("[1st Free Consultation]")) && (
+                              <span
+                                style={{
+                                  fontSize: "0.75rem",
+                                  fontWeight: 600,
+                                  padding: "0.15rem 0.55rem",
+                                  borderRadius: "var(--radius-full)",
+                                  background: "#ECFDF5",
+                                  color: "#065F46",
+                                  border: "1px solid #A7F3D0",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "0.35rem",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                <span>🎁 1st Free Consultation (₹0)</span>
+                              </span>
+                            )}
                             {(apt.consultation_fee === 400 || apt.consultation_fee === 500 || apt.reason_for_consultation?.includes("[Family Head / Father Initiative]")) && (
                               <span
                                 style={{
@@ -1139,8 +1158,10 @@ export default function AdminDashboardPage() {
                           <p style={{ fontFamily: "var(--font-serif)", fontSize: "1.05rem", fontWeight: 600, color: "var(--color-maroon)", margin: 0 }}>
                             {apt.appointment_date} · {apt.slot_time} IST
                           </p>
-                          <p style={{ fontSize: "0.75rem", color: "var(--color-charcoal-muted)", margin: 0 }}>
-                            Fee: ₹{apt.consultation_fee} ({apt.payment_status})
+                          <p style={{ fontSize: "0.75rem", color: apt.consultation_fee === 0 ? "#065F46" : "var(--color-charcoal-muted)", fontWeight: apt.consultation_fee === 0 ? 600 : 400, margin: 0 }}>
+                            {apt.consultation_fee === 0
+                              ? "Fee: FREE (₹0 · 1st Free)"
+                              : `Fee: ₹${apt.consultation_fee} (${apt.payment_status})`}
                           </p>
                         </div>
                       </div>

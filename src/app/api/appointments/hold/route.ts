@@ -4,6 +4,9 @@ import { createBookingHoldSchema } from "@/lib/validations/booking";
 import { validateBookingTiming } from "@/lib/schedule";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import { APP_CONFIG } from "@/lib/config";
+import { checkFirstConsultationEligibility } from "@/lib/patient-eligibility";
+import { createGoogleCalendarEvent } from "@/lib/google-calendar";
+import { sendBookingConfirmationEmail, sendDoctorNotificationEmail } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,11 +36,17 @@ export async function POST(request: NextRequest) {
       slotTime,
     } = parseResult.data;
 
-    const consultationFee = isFamilyHeadDiscount
-      ? APP_CONFIG.familyHeadSubsidy.fee
-      : APP_CONFIG.consultationFee;
+    // 2. Server-side check for First Free Consultation
+    const eligibility = await checkFirstConsultationEligibility(name, phone, email);
+    const isFirstFree = eligibility.isFirstFree;
 
-    // 2. Server-side timing rules (6 PM cutoff, past date check, 14-day limit)
+    const consultationFee = isFirstFree
+      ? 0
+      : isFamilyHeadDiscount
+        ? APP_CONFIG.familyHeadSubsidy.fee
+        : APP_CONFIG.consultationFee;
+
+    // 3. Server-side timing rules (6 PM cutoff, past date check, 14-day limit)
     const timingCheck = validateBookingTiming(appointmentDate, slotTime);
     if (!timingCheck.valid) {
       return NextResponse.json(
@@ -49,28 +58,57 @@ export async function POST(request: NextRequest) {
     let supabase;
     try {
       supabase = getAdminSupabase();
-    } catch (e) {
+    } catch {
       // Supabase is not configured yet in local environment
       const mockToken = crypto.randomBytes(32).toString("hex");
       const mockId = "mock-apt-" + Date.now();
+      const bookingRef = `DT-${mockId.slice(-6).toUpperCase()}`;
+
+      if (isFirstFree) {
+        const mockMeet = "https://meet.google.com/mock-clinic-call";
+        return NextResponse.json(
+          {
+            developmentMock: true,
+            isFirstFree: true,
+            success: true,
+            appointment: {
+              id: mockId,
+              appointment_date: appointmentDate,
+              slot_time: slotTime,
+              status: "confirmed",
+              payment_status: "paid",
+              consultation_fee: 0,
+              google_meet_link: mockMeet,
+              bookingRef,
+              isFirstFree: true,
+            },
+            bookingRef,
+            bookingToken: mockToken,
+            message: "Complimentary 1st consultation confirmed (Development Mock Mode).",
+          },
+          { status: 200 }
+        );
+      }
+
       return NextResponse.json(
         {
           developmentMock: true,
           message:
-            "Supabase credentials not configured in .env.local. In production, this holds the slot in Postgres with a 15-minute expiration lock.",
+            "Supabase credentials not configured in .env.local. In production, this holds the slot in Postgres with a 5-minute expiration lock.",
           appointmentId: mockId,
-          bookingRef: `DT-${mockId.slice(-6).toUpperCase()}`,
+          bookingRef,
           bookingToken: mockToken,
           appointmentDate,
           slotTime,
           consultationFee,
           isFamilyHeadDiscount: !!isFamilyHeadDiscount,
+          isFirstFree: false,
         },
         { status: 200 }
       );
     }
 
-    // 3. Check if date is blocked in schedule_overrides
+    // 4. Check if date is blocked in schedule_overrides
     const { data: override } = await supabase
       .from("schedule_overrides")
       .select("is_available, reason")
@@ -84,17 +122,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Upsert patient record
-    // Look up by email first
-    const { data: existingPatient } = await supabase
-      .from("patients")
-      .select("id")
-      .eq("email", email)
-      .maybeSingle();
-
-    let patientId = existingPatient?.id;
-
-    if (!patientId) {
+    // 5. Smart Patient Upserting
+    // Reuses patient record ONLY if Normalized Name matches AND (phone or email matches).
+    // Otherwise creates a new patient record (e.g. child booking for parent).
+    let patientId: string | null = null;
+    if (eligibility.matchedPatientIds.length > 0) {
+      patientId = eligibility.matchedPatientIds[0];
+      await supabase
+        .from("patients")
+        .update({ phone, email, age })
+        .eq("id", patientId);
+    } else {
       const { data: newPatient, error: patientError } = await supabase
         .from("patients")
         .insert({
@@ -114,15 +152,9 @@ export async function POST(request: NextRequest) {
         );
       }
       patientId = newPatient.id;
-    } else {
-      // Update phone, name, age if changed
-      await supabase
-        .from("patients")
-        .update({ name, phone, age })
-        .eq("id", patientId);
     }
 
-    // 5. Clean up any expired holds for this exact slot before checking
+    // 6. Clean up any expired holds for this exact slot before checking
     const nowIso = new Date().toISOString();
     await supabase
       .from("appointments")
@@ -132,18 +164,157 @@ export async function POST(request: NextRequest) {
       .eq("status", "pending_payment")
       .lt("hold_expires_at", nowIso);
 
-    // 6. Generate high-entropy booking token (256-bit) and SHA-256 hash for secure verification
+    // 7. Check if another patient has already confirmed this slot
+    const { data: conflicting } = await supabase
+      .from("appointments")
+      .select("id")
+      .eq("appointment_date", appointmentDate)
+      .eq("slot_time", slotTime)
+      .eq("status", "confirmed")
+      .maybeSingle();
+
+    if (conflicting) {
+      return NextResponse.json(
+        {
+          error:
+            "This appointment slot was just booked by another patient. Please choose a different slot.",
+        },
+        { status: 409 }
+      );
+    }
+
+    // 8. Generate high-entropy booking token (256-bit) and SHA-256 hash for secure verification
     const bookingToken = crypto.randomBytes(32).toString("hex");
     const bookingTokenHash = crypto.createHash("sha256").update(bookingToken).digest("hex");
 
-    // 5-minute hold for user to complete payment
+    // Pre-calculate appointment UUID upfront so Google Calendar invite has exact ID
+    const appointmentUuid = crypto.randomUUID();
+    const bookingRef = `DT-${appointmentUuid.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase()}`;
+
+    // =========================================================================
+    // CASE A: 1ST FREE CONSULTATION (Immediate Confirmation - No Payment Needed)
+    // =========================================================================
+    if (isFirstFree) {
+      let meetLink = "https://meet.google.com";
+      let calendarEventId: string | null = null;
+
+      try {
+        const calResult = await createGoogleCalendarEvent({
+          appointmentId: appointmentUuid,
+          patientName: name,
+          patientEmail: email,
+          patientPhone: phone,
+          patientAge: age,
+          language: language || "English",
+          reason: `[1st Free Consultation] ${reason || ""}`.trim(),
+          date: appointmentDate,
+          slotTime,
+        });
+        meetLink = calResult.meetLink;
+        calendarEventId = calResult.eventId;
+      } catch (calErr) {
+        console.error("Google Calendar creation warning for free consultation:", calErr);
+      }
+
+      const reasonTag = isFamilyHeadDiscount
+        ? `[Family Head / Father Initiative] [1st Free Consultation] ${reason || ""}`.trim()
+        : `[1st Free Consultation] ${reason || ""}`.trim();
+
+      const insertPayload: any = {
+        id: appointmentUuid,
+        patient_id: patientId,
+        appointment_date: appointmentDate,
+        slot_time: slotTime,
+        status: "confirmed",
+        consultation_fee: 0,
+        payment_status: "paid",
+        reason_for_consultation: reasonTag,
+        preferred_language: language,
+        hold_expires_at: null,
+        google_meet_link: meetLink,
+        google_calendar_event_id: calendarEventId,
+        booking_token_hash: bookingTokenHash,
+      };
+
+      const { data: confirmedApt, error: insertErr } = await supabase
+        .from("appointments")
+        .insert(insertPayload)
+        .select("id, appointment_date, slot_time, consultation_fee, status, google_meet_link")
+        .single();
+
+      if (insertErr) {
+        if (insertErr.code === "23505" || insertErr.message?.includes("unique_active_appointment_slot")) {
+          return NextResponse.json(
+            { error: "This slot was just booked by another patient. Please choose a different slot." },
+            { status: 409 }
+          );
+        }
+        console.error("Error creating free appointment:", insertErr);
+        return NextResponse.json(
+          { error: "Could not confirm appointment. Please try again." },
+          { status: 500 }
+        );
+      }
+
+      // Dispatch confirmation email to patient & notification to doctor
+      sendBookingConfirmationEmail({
+        appointmentId: confirmedApt.id,
+        patientName: name,
+        patientEmail: email,
+        patientPhone: phone,
+        patientAge: age,
+        preferredLanguage: language,
+        reason: reasonTag,
+        appointmentDate,
+        slotTime,
+        googleMeetLink: meetLink,
+        googleCalendarEventId: calendarEventId,
+        consultationFee: 0,
+        isFirstFree: true,
+      }).catch((e) => console.error("Email warning:", e));
+
+      sendDoctorNotificationEmail({
+        appointmentId: confirmedApt.id,
+        patientName: name,
+        patientEmail: email,
+        patientPhone: phone,
+        patientAge: age,
+        preferredLanguage: language,
+        reason: reasonTag,
+        appointmentDate,
+        slotTime,
+        googleMeetLink: meetLink,
+        googleCalendarEventId: calendarEventId,
+        consultationFee: 0,
+        isFirstFree: true,
+      }).catch((e) => console.error("Doctor notification warning:", e));
+
+      return NextResponse.json(
+        {
+          isFirstFree: true,
+          success: true,
+          appointment: {
+            ...confirmedApt,
+            bookingRef,
+            isFirstFree: true,
+          },
+          bookingRef,
+          message: "Complimentary 1st consultation confirmed successfully!",
+        },
+        { status: 200 }
+      );
+    }
+
+    // =========================================================================
+    // CASE B: STANDARD / RETURNING PATIENT (5-Minute Hold for UPI Payment)
+    // =========================================================================
     const holdExpiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
     let appointment: any = null;
     let aptError: any = null;
 
-    // Attempt insert with booking_token_hash first
     const insertPayload: any = {
+      id: appointmentUuid,
       patient_id: patientId,
       appointment_date: appointmentDate,
       slot_time: slotTime,
@@ -165,7 +336,6 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (firstTry.error && (firstTry.error.message?.includes("booking_token_hash") || firstTry.error.code === "PGRST204")) {
-      // Graceful fallback if database migration 02 hasn't been executed on remote Supabase yet
       delete insertPayload.booking_token_hash;
       insertPayload.razorpay_signature = `BTH:${bookingTokenHash}`;
       const secondTry = await supabase
@@ -181,7 +351,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (aptError) {
-      // Postgres error code 23505 indicates unique constraint violation (slot already booked/held)
       if (aptError.code === "23505" || aptError.message?.includes("unique_active_appointment_slot")) {
         return NextResponse.json(
           {
@@ -199,10 +368,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const bookingRef = `DT-${appointment.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase()}`;
-
     return NextResponse.json(
       {
+        isFirstFree: false,
         appointmentId: appointment.id,
         bookingRef,
         bookingToken,
