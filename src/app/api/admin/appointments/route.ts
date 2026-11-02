@@ -52,6 +52,9 @@ export async function GET(request: NextRequest) {
 
     if (statusFilter && statusFilter !== "all") {
       query = query.eq("status", statusFilter);
+    } else {
+      // Exclude cancelled bookings from main admin dashboard
+      query = query.neq("status", "cancelled");
     }
 
     if (dateFilter) {

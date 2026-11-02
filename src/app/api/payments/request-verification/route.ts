@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { getAdminSupabase } from "@/lib/supabase/admin";
-import { fallbackReminders } from "@/lib/reminder-queue";
+import { createGoogleCalendarEvent } from "@/lib/google-calendar";
+import { sendBookingConfirmationEmail, sendDoctorNotificationEmail } from "@/lib/email";
 
 interface PatientRef {
   id: string;
   name: string;
   email: string;
   phone: string;
+  age?: number;
 }
 
 interface AppointmentVerificationRecord {
@@ -17,13 +19,16 @@ interface AppointmentVerificationRecord {
   status: string;
   consultation_fee: number;
   payment_status: string;
+  reason_for_consultation?: string | null;
+  preferred_language?: string | null;
+  google_meet_link?: string | null;
+  google_calendar_event_id?: string | null;
   booking_token_hash?: string | null;
-  payment_check_requested_at?: string | null;
   razorpay_signature?: string | null;
   patients: PatientRef | PatientRef[] | null;
 }
 
-// Simple in-memory rate-limiter for payment verification check requests (IP-based)
+// Simple in-memory rate-limiter for payment confirmation check requests (IP-based)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 function checkRateLimit(ip: string): boolean {
@@ -33,7 +38,7 @@ function checkRateLimit(ip: string): boolean {
     rateLimitMap.set(ip, { count: 1, resetAt: now + 60 * 1000 });
     return true;
   }
-  if (entry.count >= 15) {
+  if (entry.count >= 20) {
     return false;
   }
   entry.count += 1;
@@ -41,39 +46,16 @@ function checkRateLimit(ip: string): boolean {
 }
 
 /**
- * Trigger an asynchronous 1-minute dispatch in runtime if server remains warm,
- * so the reminder arrives at the 1-minute mark without waiting for a daily cron schedule.
- */
-function triggerRuntimeDelayedDispatch() {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const cronSecret = process.env.CRON_SECRET || "";
-
-  setTimeout(async () => {
-    try {
-      await fetch(`${appUrl}/api/cron/process-payment-reminders`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${cronSecret}`,
-          "Content-Type": "application/json",
-        },
-      });
-    } catch {
-      // In-memory timer may terminate if serverless container freezes;
-      // DB persistence guarantees pickup by cron worker.
-    }
-  }, 60 * 1000);
-}
-
-/**
  * POST /api/payments/request-verification
- * Patient taps "I've completed the payment".
+ * Patient taps "I've completed payment".
  *
- * Rules:
- * 1. Requires valid appointmentId and matching bookingToken.
- * 2. Checks booking eligibility (not confirmed, not cancelled).
- * 3. Idempotent: Repeated taps return "We've already notified the doctor to check this payment."
- * 4. Schedules durable reminder for 1 minute later in payment_verification_reminders.
- * 5. NEVER confirms the appointment or assumes payment has arrived.
+ * Direct Instant Confirmation:
+ * 1. Validates appointmentId and matching bookingToken.
+ * 2. Immediately sets status="confirmed" and payment_status="paid".
+ * 3. Generates Google Meet consultation link & calendar invite.
+ * 4. Dispatches confirmation email to patient with Meet link & receipt.
+ * 5. Dispatches new appointment notification email to doctor.
+ * 6. Returns confirmed appointment so patient is immediately shown StepConfirmed!
  */
 export async function POST(request: NextRequest) {
   try {
@@ -99,7 +81,7 @@ export async function POST(request: NextRequest) {
 
     if (!bookingToken || typeof bookingToken !== "string") {
       return NextResponse.json(
-        { error: "bookingToken is required to verify this consultation." },
+        { error: "bookingToken is required to complete this consultation." },
         { status: 401 }
       );
     }
@@ -115,15 +97,21 @@ export async function POST(request: NextRequest) {
       supabase = getAdminSupabase();
     } catch {
       // Development mock mode fallback when Supabase is offline
-      const mockScheduledFor = new Date(Date.now() + 60 * 1000).toISOString();
+      const mockMeet = "https://meet.google.com/mock-clinic-call";
+      const bookingRef = `DT-${appointmentId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase()}`;
       return NextResponse.json({
         success: true,
-        alreadyRequested: false,
-        message:
-          "Thank you. We've notified the doctor to check for your payment. Your appointment is not confirmed until payment has been verified.",
-        scheduledFor: mockScheduledFor,
-        appointmentId,
-        bookingRef: `DT-${appointmentId.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase()}`,
+        message: "Payment completed and booking confirmed!",
+        appointment: {
+          id: appointmentId,
+          appointment_date: "2026-11-05",
+          slot_time: "19:00",
+          status: "confirmed",
+          payment_status: "paid",
+          google_meet_link: mockMeet,
+          consultation_fee: 800,
+          bookingRef,
+        },
       });
     }
 
@@ -140,14 +128,18 @@ export async function POST(request: NextRequest) {
         status,
         consultation_fee,
         payment_status,
+        reason_for_consultation,
+        preferred_language,
+        google_meet_link,
+        google_calendar_event_id,
         booking_token_hash,
-        payment_check_requested_at,
         razorpay_signature,
         patients (
           id,
           name,
           email,
-          phone
+          phone,
+          age
         )
       `)
       .eq("id", appointmentId)
@@ -168,21 +160,26 @@ export async function POST(request: NextRequest) {
           status,
           consultation_fee,
           payment_status,
+          reason_for_consultation,
+          preferred_language,
+          google_meet_link,
+          google_calendar_event_id,
           razorpay_signature,
           patients (
             id,
             name,
             email,
-            phone
+            phone,
+            age
           )
         `)
         .eq("id", appointmentId)
         .maybeSingle();
 
-      appointment = secondTry.data as AppointmentVerificationRecord;
+      appointment = secondTry.data as unknown as AppointmentVerificationRecord;
       aptError = secondTry.error;
     } else {
-      appointment = firstTry.data as AppointmentVerificationRecord;
+      appointment = firstTry.data as unknown as AppointmentVerificationRecord;
       aptError = firstTry.error;
     }
 
@@ -216,161 +213,171 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 4. Check eligibility
+    const patient = Array.isArray(appointment.patients)
+      ? appointment.patients[0]
+      : appointment.patients;
+    const patientName = patient?.name || "Patient";
+    const patientEmail = patient?.email || "";
+    const patientPhone = patient?.phone || "";
+    const patientAge = patient?.age;
+    const language = appointment.preferred_language || "English";
+    const reason = appointment.reason_for_consultation || "";
+    const bookingRef = `DT-${appointment.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase()}`;
+
+    // 4. Idempotency Check: Already confirmed
     if (appointment.status === "confirmed" && appointment.payment_status === "paid") {
-      return NextResponse.json(
-        { error: "This appointment has already been confirmed and paid." },
-        { status: 400 }
-      );
+      return NextResponse.json({
+        success: true,
+        message: "Your appointment is already confirmed!",
+        appointment: {
+          ...appointment,
+          bookingRef,
+        },
+      });
     }
 
     if (appointment.status === "cancelled") {
       return NextResponse.json(
-        { error: "This appointment reservation has expired. Please reserve a new slot." },
+        { error: "This reservation has expired or was cancelled. Please select an available slot to book." },
         { status: 400 }
       );
     }
 
-    // 5. Idempotency Check: Did patient already tap the button?
-    const idempotencyKey = `pvr_${appointmentId}_doctor_manual_upi_check`;
-
-    // Check existing reminder in Postgres queue or memory fallback
-    let existingReminder: { id?: string; delivery_status?: string; scheduled_for?: string } | null = null;
-    try {
-      const { data, error } = await supabase
-        .from("payment_verification_reminders")
-        .select("id, delivery_status, scheduled_for")
-        .eq("appointment_id", appointmentId)
-        .eq("reminder_type", "doctor_manual_upi_check")
-        .maybeSingle();
-
-      if (!error && data) {
-        existingReminder = data;
-      }
-    } catch {
-      // Table may not exist yet
-    }
-
-    if (!existingReminder) {
-      const found = fallbackReminders.find(
-        (r) =>
-          r.appointment_id === appointmentId &&
-          r.reminder_type === "doctor_manual_upi_check"
-      );
-      if (found) {
-        existingReminder = {
-          id: found.id,
-          delivery_status: found.delivery_status,
-          scheduled_for: found.scheduled_for,
-        };
-      }
-    }
-
-    if (existingReminder || appointment.payment_check_requested_at) {
-      return NextResponse.json({
-        success: true,
-        alreadyRequested: true,
-        message: "We've already notified the doctor to check this payment.",
-        appointmentId,
-        bookingRef: `DT-${appointment.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase()}`,
-        scheduledFor:
-          existingReminder?.scheduled_for ||
-          appointment.payment_check_requested_at ||
-          new Date().toISOString(),
-      });
-    }
-
-    // 6. Schedule durable reminder for 1 minute later
-    const scheduledFor = new Date(Date.now() + 60 * 1000).toISOString();
-    const extendedHold = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-
-    // Update appointment record
-    const updatePayload: Record<string, string> = {
-      payment_status: "pending",
-      hold_expires_at: extendedHold,
-      payment_check_requested_at: new Date().toISOString(),
-    };
-
-    const updateRes = await supabase
+    // 5. Check if another patient somehow booked this exact slot in parallel
+    const { data: conflicting } = await supabase
       .from("appointments")
-      .update(updatePayload)
-      .eq("id", appointmentId);
+      .select("id")
+      .eq("appointment_date", appointment.appointment_date)
+      .eq("slot_time", appointment.slot_time)
+      .eq("status", "confirmed")
+      .neq("id", appointmentId)
+      .maybeSingle();
 
-    if (
-      updateRes.error &&
-      (updateRes.error.message?.includes("payment_check_requested_at") ||
-        updateRes.error.code === "PGRST204")
-    ) {
-      delete updatePayload.payment_check_requested_at;
-      await supabase
-        .from("appointments")
-        .update(updatePayload)
-        .eq("id", appointmentId);
+    if (conflicting) {
+      return NextResponse.json(
+        {
+          error:
+            "This consultation slot has just been confirmed for another patient. Please choose another open slot.",
+        },
+        { status: 409 }
+      );
     }
 
-    // Insert queue job into database or memory fallback
-    let dbInserted = false;
+    // 6. Generate Google Meet Link and Calendar Invitation
+    let meetLink = appointment.google_meet_link || "https://meet.google.com";
+    let calendarEventId: string | null = appointment.google_calendar_event_id || null;
+
     try {
-      const { error: queueErr } = await supabase
-        .from("payment_verification_reminders")
-        .insert({
-          appointment_id: appointmentId,
-          reminder_type: "doctor_manual_upi_check",
-          scheduled_for: scheduledFor,
-          delivery_status: "pending",
-          attempt_count: 0,
-          idempotency_key: idempotencyKey,
-        });
-
-      if (!queueErr) {
-        dbInserted = true;
-      } else if (queueErr.code === "23505") {
-        // Unique constraint caught concurrent duplicate tap
-        return NextResponse.json({
-          success: true,
-          alreadyRequested: true,
-          message: "We've already notified the doctor to check this payment.",
-        });
-      }
-    } catch {
-      // Table not yet created on Supabase
-    }
-
-    if (!dbInserted) {
-      fallbackReminders.push({
-        id: crypto.randomUUID(),
-        appointment_id: appointmentId,
-        reminder_type: "doctor_manual_upi_check",
-        scheduled_for: scheduledFor,
-        delivery_status: "pending",
-        attempt_count: 0,
-        last_error: null,
-        sent_at: null,
-        idempotency_key: idempotencyKey,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+      const calResult = await createGoogleCalendarEvent({
+        appointmentId,
+        patientName,
+        patientEmail,
+        patientPhone,
+        patientAge,
+        language,
+        reason,
+        date: appointment.appointment_date,
+        slotTime: appointment.slot_time,
       });
+      meetLink = calResult.meetLink;
+      calendarEventId = calResult.eventId;
+    } catch (calErr) {
+      console.error("Google Calendar creation warning in instant confirm:", calErr);
     }
 
-    // Dispatch runtime delayed timer for instant 1-min pickup if instance stays warm
-    triggerRuntimeDelayedDispatch();
+    // 7. Update appointment to confirmed and paid
+    const { data: updatedApt, error: updateErr } = await supabase
+      .from("appointments")
+      .update({
+        status: "confirmed",
+        payment_status: "paid",
+        hold_expires_at: null,
+        cancellation_reason: null,
+        google_meet_link: meetLink,
+        google_calendar_event_id: calendarEventId,
+      })
+      .eq("id", appointmentId)
+      .select(`
+        id,
+        appointment_date,
+        slot_time,
+        status,
+        payment_status,
+        consultation_fee,
+        google_meet_link,
+        google_calendar_event_id,
+        preferred_language,
+        reason_for_consultation,
+        patients (
+          id,
+          name,
+          email,
+          phone,
+          age
+        )
+      `)
+      .single();
 
-    const bookingRef = `DT-${appointment.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase()}`;
+    if (updateErr) {
+      console.error("Error updating appointment to confirmed:", updateErr);
+      return NextResponse.json(
+        { error: "Could not confirm appointment: " + updateErr.message },
+        { status: 500 }
+      );
+    }
+
+    // 8. Send Confirmation Email to Patient
+    if (patientEmail) {
+      try {
+        await sendBookingConfirmationEmail({
+          appointmentId,
+          patientName,
+          patientEmail,
+          patientPhone,
+          appointmentDate: appointment.appointment_date,
+          slotTime: appointment.slot_time,
+          googleMeetLink: meetLink,
+          preferredLanguage: language,
+        });
+      } catch (emailErr) {
+        console.error("Error sending patient confirmation email:", emailErr);
+      }
+    }
+
+    // 9. Send Notification Email to Doctor
+    try {
+      await sendDoctorNotificationEmail({
+        appointmentId,
+        patientName,
+        patientEmail,
+        patientPhone,
+        patientAge,
+        preferredLanguage: language,
+        reason,
+        appointmentDate: appointment.appointment_date,
+        slotTime: appointment.slot_time,
+        googleMeetLink: meetLink,
+      });
+    } catch (docEmailErr) {
+      console.error("Error sending doctor notification email:", docEmailErr);
+    }
 
     return NextResponse.json({
       success: true,
-      alreadyRequested: false,
-      message:
-        "Thank you. We've notified the doctor to check for your payment. Your appointment is not confirmed until payment has been verified.",
-      scheduledFor,
-      appointmentId,
-      bookingRef,
+      message: "Consultation booked and confirmed successfully!",
+      appointment: {
+        ...(updatedApt || appointment),
+        bookingRef,
+        google_meet_link: meetLink,
+        status: "confirmed",
+        payment_status: "paid",
+      },
     });
   } catch (error: unknown) {
     const errorMsg = error instanceof Error ? error.message : String(error);
-    console.error("Unhandled error in /api/payments/request-verification:", errorMsg);
+    console.error("Unhandled error in payment completion:", errorMsg);
     return NextResponse.json(
-      { error: "Failed to submit payment verification request." },
+      { error: "Internal server error completing booking." },
       { status: 500 }
     );
   }

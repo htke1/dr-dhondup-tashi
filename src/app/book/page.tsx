@@ -988,6 +988,44 @@ function StepReview({
   const [preferNotToShareReason, setPreferNotToShareReason] = useState(false);
   const [cancellingReservation, setCancellingReservation] = useState(false);
 
+  // 5-Minute Payment Window Timer State
+  const [remainingSeconds, setRemainingSeconds] = useState(300);
+  const [isTimedOut, setIsTimedOut] = useState(false);
+
+  useEffect(() => {
+    if (!upiPaymentData) {
+      setRemainingSeconds(300);
+      setIsTimedOut(false);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setRemainingSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [upiPaymentData]);
+
+  useEffect(() => {
+    if (upiPaymentData && remainingSeconds === 0 && !isTimedOut) {
+      setIsTimedOut(true);
+      const appointmentId = upiPaymentData.appointmentId;
+      if (appointmentId) {
+        fetch(`/api/appointments/${appointmentId}/cancel`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reason: "Payment window timed out (5 minutes)" }),
+        }).catch((err) => console.warn("Timeout auto-cancel warning:", err));
+      }
+    }
+  }, [remainingSeconds, upiPaymentData, isTimedOut]);
+
   // Auto-scroll up to the top of the QR payment step smoothly below navbar
   useEffect(() => {
     if (upiPaymentData) {
@@ -1242,7 +1280,12 @@ function StepReview({
 
       const data = await res.json();
       if (!res.ok) {
-        setErrorMsg(data.error || "Could not record payment notification. Please try again.");
+        setErrorMsg(data.error || "Could not complete booking confirmation. Please try again.");
+        return;
+      }
+
+      if (data.success && data.appointment) {
+        onConfirmed(data.appointment);
         return;
       }
 
@@ -1304,6 +1347,40 @@ function StepReview({
 
   // Render UPI QR Payment View if QR code is ready
   if (upiPaymentData) {
+    if (isTimedOut) {
+      return (
+        <div
+          className="card card-padded"
+          style={{ marginBottom: "1.25rem", textAlign: "center", padding: "3rem 1.5rem" }}
+          id="upi-payment-panel"
+        >
+          <div style={{ fontSize: "2.75rem", marginBottom: "0.75rem" }}>⏳</div>
+          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.45rem", color: "var(--color-charcoal)", marginBottom: "0.5rem" }}>
+            Reservation Window Expired
+          </h2>
+          <p style={{ fontSize: "0.875rem", color: "var(--color-charcoal-soft)", maxWidth: "440px", margin: "0 auto 1.5rem", lineHeight: 1.5 }}>
+            Your 5-minute reservation window has ended and your temporary slot hold has been released. You can select another available slot whenever you are ready.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setIsTimedOut(false);
+              setUpiPaymentData(null);
+              if (onCancelBooking) {
+                onCancelBooking();
+              } else {
+                onBack();
+              }
+            }}
+            className="btn btn-primary"
+            style={{ margin: "0 auto", justifyContent: "center" }}
+          >
+            Select an Available Slot →
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div className="card card-padded" style={{ marginBottom: "1.25rem" }} id="upi-payment-panel">
         <button
@@ -1318,7 +1395,7 @@ function StepReview({
           Back to Details
         </button>
 
-        <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+        <div style={{ textAlign: "center", marginBottom: "1.25rem" }}>
           <div
             style={{
               display: "inline-flex",
@@ -1338,9 +1415,37 @@ function StepReview({
           <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.6rem", color: "var(--color-charcoal)", margin: "0 0 0.35rem" }}>
             Scan QR to Authorize Payment
           </h2>
-          <p style={{ fontSize: "0.875rem", color: "var(--color-charcoal-soft)", maxWidth: "520px", margin: "0 auto" }}>
+          <p style={{ fontSize: "0.875rem", color: "var(--color-charcoal-soft)", maxWidth: "520px", margin: "0 auto 1rem" }}>
             Scan with any UPI app (Google Pay, PhonePe, Paytm, BHIM, or Mobile Banking) to complete your consultation fee.
           </p>
+
+          {/* 5-Minute Live Countdown Timer */}
+          <div
+            style={{
+              maxWidth: "420px",
+              margin: "0 auto",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              background: remainingSeconds < 60 ? "#FFEBEE" : "var(--color-cream-soft)",
+              border: remainingSeconds < 60 ? "1px solid #FFCDD2" : "1px solid var(--color-border-soft)",
+              borderRadius: "var(--radius-md)",
+              padding: "0.55rem 0.95rem",
+              color: remainingSeconds < 60 ? "#C62828" : "var(--color-charcoal)",
+              fontSize: "0.8125rem",
+              fontWeight: 500,
+            }}
+            role="timer"
+            aria-live="polite"
+          >
+            <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <span>⏱️</span>
+              <span>{remainingSeconds < 60 ? "Expiring soon: Complete in" : "Time remaining to complete:"}</span>
+            </span>
+            <strong style={{ fontFamily: "monospace", fontSize: "1.05rem", color: remainingSeconds < 60 ? "#C62828" : "var(--color-maroon)" }}>
+              {Math.floor(remainingSeconds / 60)}:{String(remainingSeconds % 60).padStart(2, "0")}
+            </strong>
+          </div>
         </div>
 
         {/* QR Code & Recipient Info Container */}
@@ -1602,11 +1707,11 @@ function StepReview({
               2
             </span>
             <h3 style={{ fontSize: "0.95rem", fontWeight: 700, margin: 0, color: "var(--color-charcoal)" }}>
-              Step 2: Confirm Your Payment Attempt
+              Step 2: Confirm Payment & Complete Booking
             </h3>
           </div>
           <p style={{ fontSize: "0.8125rem", color: "var(--color-charcoal-soft)", margin: "0 0 1rem" }}>
-            Once you have authorized the consultation fee in your UPI app, tap below to notify Dr. Dhondup Tashi to check for your incoming payment.
+            Once you have authorized the consultation fee in your UPI app, tap below to immediately confirm your appointment and receive your Google Meet consultation room link.
           </p>
 
           <button
@@ -1624,7 +1729,7 @@ function StepReview({
             }}
           >
             {submittingPaymentCheck ? (
-              "Notifying doctor..."
+              "Confirming consultation..."
             ) : (
               "I've completed the payment"
             )}

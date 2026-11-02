@@ -93,6 +93,15 @@ export default function AdminDashboardPage() {
   const [savingNotes, setSavingNotes] = useState(false);
   const [notesSuccessNotice, setNotesSuccessNotice] = useState(false);
 
+  // Admin Reschedule Modal State
+  const [selectedAppointmentForReschedule, setSelectedAppointmentForReschedule] = useState<AppointmentRecord | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleSlot, setRescheduleSlot] = useState("19:00");
+  const [rescheduleReason, setRescheduleReason] = useState("");
+  const [rescheduling, setRescheduling] = useState(false);
+  const [rescheduleError, setRescheduleError] = useState<string | null>(null);
+  const [actionSuccessNotice, setActionSuccessNotice] = useState<string | null>(null);
+
   const [blockDate, setBlockDate] = useState("");
   const [blockReason, setBlockReason] = useState("");
   const [blockingDate, setBlockingDate] = useState(false);
@@ -299,6 +308,49 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const openRescheduleModal = (apt: AppointmentRecord) => {
+    setSelectedAppointmentForReschedule(apt);
+    setRescheduleDate(apt.appointment_date);
+    setRescheduleSlot(apt.slot_time || "19:00");
+    setRescheduleReason("");
+    setRescheduleError(null);
+  };
+
+  const handleConfirmAdminReschedule = async () => {
+    if (!selectedAppointmentForReschedule || !rescheduleDate || !rescheduleSlot) return;
+    setRescheduling(true);
+    setRescheduleError(null);
+    try {
+      const res = await fetch(`/api/admin/appointments/${selectedAppointmentForReschedule.id}/reschedule`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          newDate: rescheduleDate,
+          newSlotTime: rescheduleSlot,
+          reason: rescheduleReason.trim() || "Doctor administrative schedule change",
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setRescheduleError(data.error || "Failed to reschedule appointment.");
+        return;
+      }
+
+      setActionSuccessNotice(
+        `✓ Consultation rescheduled to ${rescheduleDate} at ${rescheduleSlot} IST. Updated notification email sent to ${selectedAppointmentForReschedule.patients?.name || "patient"}.`
+      );
+      setTimeout(() => setActionSuccessNotice(null), 6000);
+
+      setSelectedAppointmentForReschedule(null);
+      loadAppointments();
+    } catch {
+      setRescheduleError("Network error while rescheduling.");
+    } finally {
+      setRescheduling(false);
+    }
+  };
+
   const handleUpdateStatus = async (aptId: string, newStatus: string) => {
     try {
       const res = await fetch(`/api/admin/appointments/${aptId}`, {
@@ -449,26 +501,15 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const todayCount = appointments.filter((a) => a.appointment_date === todayStr).length;
+  const todayCount = appointments.filter((a) => a.appointment_date === todayStr && a.status !== "cancelled").length;
   const confirmedCount = appointments.filter((a) => a.status === "confirmed").length;
-  const pendingVerificationAppointments = appointments.filter(
-    (a) =>
-      a.status === "pending_payment" ||
-      a.payment_status === "pending" ||
-      Boolean(a.payment_check_requested_at)
-  );
-  const pendingCount = pendingVerificationAppointments.length;
+  const completedCount = appointments.filter((a) => a.status === "completed").length;
+  const allActiveCount = appointments.filter((a) => a.status !== "cancelled").length;
 
-  // Instant in-memory filter
+  // Instant in-memory filter: Only confirmed and completed consultations are shown
   const displayedAppointments = appointments.filter((apt) => {
+    if (apt.status === "cancelled") return false;
     if (statusFilter === "today") return apt.appointment_date === todayStr;
-    if (statusFilter === "pending_payment") {
-      return (
-        apt.status === "pending_payment" ||
-        apt.payment_status === "pending" ||
-        Boolean(apt.payment_check_requested_at)
-      );
-    }
     if (statusFilter === "confirmed") return apt.status === "confirmed";
     if (statusFilter === "completed") return apt.status === "completed";
     return true;
@@ -687,44 +728,30 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* Urgent Alert when Patients Await Payment Verification */}
-        {pendingCount > 0 && (
+        {/* Action / Reschedule Success Notice */}
+        {actionSuccessNotice && (
           <div
             style={{
-              background: "#FFF8E1",
-              border: "1.5px solid #FFB300",
+              background: "#E8F5E9",
+              border: "1px solid #A5D6A7",
               borderRadius: "var(--radius-md)",
-              padding: "0.875rem 1.25rem",
+              padding: "0.75rem 1.25rem",
               marginBottom: "1.25rem",
+              fontSize: "0.85rem",
+              color: "#2E7D32",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              gap: "1rem",
-              flexWrap: "wrap",
-              boxShadow: "0 2px 8px rgba(255, 179, 0, 0.15)",
             }}
-            role="alert"
+            role="status"
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
-              <span style={{ fontSize: "1.25rem" }}>⚡</span>
-              <div>
-                <strong style={{ color: "#E65100", fontSize: "0.9375rem", display: "block" }}>
-                  {pendingCount} Patient{pendingCount > 1 ? "s" : ""} Awaiting Payment Verification
-                </strong>
-                <span style={{ fontSize: "0.8125rem", color: "#6D4C41" }}>
-                  Patients have tapped &quot;I&apos;ve completed the payment&quot;. Review your UPI app and confirm their booking.
-                </span>
-              </div>
-            </div>
+            <span>{actionSuccessNotice}</span>
             <button
-              onClick={() => {
-                setActiveTab("consultations");
-                setStatusFilter("pending_payment");
-              }}
-              className="btn btn-sm"
-              style={{ background: "#E65100", color: "#FFFFFF", border: "none", fontWeight: 600 }}
+              onClick={() => setActionSuccessNotice(null)}
+              className="btn btn-ghost btn-sm"
+              style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem" }}
             >
-              Review Verifications &rarr;
+              ✕
             </button>
           </div>
         )}
@@ -780,9 +807,26 @@ export default function AdminDashboardPage() {
 
         {/* KPI Summary Cards */}
         <div className="admin-kpi-grid">
-          <div className="card card-padded" style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+          <div
+            onClick={() => {
+              setActiveTab("consultations");
+              setStatusFilter("today");
+            }}
+            className="card card-padded"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.25rem",
+              cursor: "pointer",
+              border: statusFilter === "today" && activeTab === "consultations" ? "2px solid var(--color-maroon)" : "1px solid var(--color-border-soft)",
+              transition: "all 0.2s ease",
+            }}
+            role="button"
+            tabIndex={0}
+            title="Click to view Today's Consultations"
+          >
             <span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--color-charcoal-muted)", fontWeight: 600 }}>
-              Today&apos;s Appointments
+              Today&apos;s Clinic (Click to View)
             </span>
             <span style={{ fontFamily: "var(--font-serif)", fontSize: "2rem", color: "var(--color-maroon)", fontWeight: 600 }}>
               {todayCount}
@@ -790,17 +834,48 @@ export default function AdminDashboardPage() {
             <span style={{ fontSize: "0.75rem", color: "var(--color-charcoal-soft)" }}>Slots: 7:00, 7:20, 7:40 PM IST</span>
           </div>
 
-          <div className="card card-padded" style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+          <div
+            onClick={() => {
+              setActiveTab("consultations");
+              setStatusFilter("all");
+            }}
+            className="card card-padded"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.25rem",
+              cursor: "pointer",
+              border: statusFilter === "all" && activeTab === "consultations" ? "2px solid var(--color-maroon)" : "1px solid var(--color-border-soft)",
+              transition: "all 0.2s ease",
+            }}
+            role="button"
+            tabIndex={0}
+            title="Click to view All Consultations"
+          >
             <span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--color-charcoal-muted)", fontWeight: 600 }}>
-              Confirmed Consultations
+              All Active Bookings
             </span>
             <span style={{ fontFamily: "var(--font-serif)", fontSize: "2rem", color: "var(--color-charcoal)", fontWeight: 600 }}>
-              {confirmedCount}
+              {allActiveCount}
             </span>
-            <span style={{ fontSize: "0.75rem", color: "#2E7D32" }}>Verified payment received</span>
+            <span style={{ fontSize: "0.75rem", color: "#2E7D32" }}>Confirmed & Completed</span>
           </div>
 
-          <div className="card card-padded" style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+          <div
+            onClick={() => setActiveTab("schedule")}
+            className="card card-padded"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.25rem",
+              cursor: "pointer",
+              border: activeTab === "schedule" ? "2px solid var(--color-maroon)" : "1px solid var(--color-border-soft)",
+              transition: "all 0.2s ease",
+            }}
+            role="button"
+            tabIndex={0}
+            title="Click to manage blocked dates"
+          >
             <span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--color-charcoal-muted)", fontWeight: 600 }}>
               Blocked Dates
             </span>
@@ -850,17 +925,19 @@ export default function AdminDashboardPage() {
               <div className="admin-filter-bar">
                 <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", margin: 0 }}>
                   {statusFilter === "today"
-                    ? "Today's Consultations"
-                    : statusFilter === "pending_payment"
-                    ? "Payment Verifications"
-                    : "Patient Consultations"}
+                    ? `Today's Consultations (${todayCount})`
+                    : statusFilter === "confirmed"
+                    ? `Confirmed Upcoming (${confirmedCount})`
+                    : statusFilter === "completed"
+                    ? `Completed Consultations (${completedCount})`
+                    : `All Consultations (${allActiveCount})`}
                 </h2>
                 <div className="admin-filter-buttons">
                   {[
-                    { id: "today", label: `Today's Clinic (${todayCount})` },
-                    { id: "all", label: `All (${appointments.length})` },
-                    { id: "pending_payment", label: `Verifications (${pendingVerificationAppointments.length})` },
-                    { id: "confirmed", label: `Confirmed (${confirmedCount})` },
+                    { id: "today", label: `📅 Today's Clinic (${todayCount})` },
+                    { id: "all", label: `All (${allActiveCount})` },
+                    { id: "confirmed", label: `Upcoming (${confirmedCount})` },
+                    { id: "completed", label: `Completed (${completedCount})` },
                   ].map((tabItem) => (
                     <button
                       key={tabItem.id}
@@ -1084,171 +1161,6 @@ export default function AdminDashboardPage() {
                         </div>
                       )}
 
-                      {/* Manual UPI Payment Verification Notice & Action */}
-                      {(apt.payment_check_requested_at ||
-                        apt.payment_verification_reminder ||
-                        apt.status === "pending_payment" ||
-                        (apt.status === "cancelled" && (apt.payment_check_requested_at || apt.payment_verification_reminder))) &&
-                        apt.status !== "completed" && (() => {
-                          const isExpiredHold =
-                            (apt.status === "cancelled" ||
-                              (apt.hold_expires_at && new Date(apt.hold_expires_at) < new Date())) &&
-                            apt.status !== "confirmed";
-                          const bookingRef = apt.razorpay_order_id?.startsWith("UPI-REF:")
-                            ? apt.razorpay_order_id.slice(8)
-                            : `DT-${apt.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase()}`;
-                          const reminder = apt.payment_verification_reminder;
-
-                          return (
-                            <div
-                              className="admin-upi-box"
-                              style={{
-                                background: isExpiredHold ? "#FFF8E1" : undefined,
-                                borderColor: isExpiredHold ? "#FFE082" : undefined,
-                              }}
-                            >
-                              <div style={{ flex: 1 }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem", flexWrap: "wrap" }}>
-                                  <span style={{ fontSize: "1.1rem" }}>{isConfirmed ? "🟢" : isExpiredHold ? "⚠️" : "🟡"}</span>
-                                  <strong style={{ color: isConfirmed ? "#2E7D32" : "#B78103", fontSize: "0.925rem" }}>
-                                    {isConfirmed
-                                      ? "Payment Verified & Appointment Confirmed"
-                                      : isExpiredHold
-                                      ? "Expired Reservation — Reconciliation Available"
-                                      : "Payment Verification Required"}
-                                  </strong>
-                                  <span
-                                    style={{
-                                      fontSize: "0.7rem",
-                                      fontWeight: 700,
-                                      textTransform: "uppercase",
-                                      padding: "0.15rem 0.5rem",
-                                      borderRadius: "4px",
-                                      background: isConfirmed ? "#E8F5E9" : "rgba(196,127,58,0.15)",
-                                      color: isConfirmed ? "#2E7D32" : "var(--color-maroon)",
-                                    }}
-                                  >
-                                    {isConfirmed ? "Paid" : "Awaiting manual verification"}
-                                  </span>
-                                </div>
-
-                                {/* Summary Grid */}
-                                <div
-                                  style={{
-                                    display: "grid",
-                                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                                    gap: "0.5rem 1rem",
-                                    fontSize: "0.8125rem",
-                                    color: "var(--color-charcoal)",
-                                    margin: "0.5rem 0",
-                                    background: "#FFFFFF",
-                                    padding: "0.65rem 0.85rem",
-                                    borderRadius: "var(--radius-sm)",
-                                    border: "1px solid var(--color-border-soft)",
-                                  }}
-                                >
-                                  <div>
-                                    <span style={{ color: "var(--color-charcoal-muted)", display: "block", fontSize: "0.75rem" }}>
-                                      Patient Name
-                                    </span>
-                                    <strong>{apt.patients?.name || "Patient"}</strong>
-                                  </div>
-                                  <div>
-                                    <span style={{ color: "var(--color-charcoal-muted)", display: "block", fontSize: "0.75rem" }}>
-                                      Booking Reference
-                                    </span>
-                                    <code style={{ fontFamily: "monospace", fontWeight: 700, color: "var(--color-maroon)" }}>
-                                      {bookingRef}
-                                    </code>
-                                  </div>
-                                  <div>
-                                    <span style={{ color: "var(--color-charcoal-muted)", display: "block", fontSize: "0.75rem" }}>
-                                      Appointment
-                                    </span>
-                                    <span>{apt.appointment_date} · {apt.slot_time} IST</span>
-                                  </div>
-                                  <div>
-                                    <span style={{ color: "var(--color-charcoal-muted)", display: "block", fontSize: "0.75rem" }}>
-                                      Expected Fee
-                                    </span>
-                                    <strong style={{ color: "var(--color-maroon)" }}>
-                                      ₹{apt.consultation_fee}
-                                    </strong>
-                                  </div>
-                                  <div>
-                                    <span style={{ color: "var(--color-charcoal-muted)", display: "block", fontSize: "0.75rem" }}>
-                                      Reminder Scheduled Time
-                                    </span>
-                                    <span>
-                                      {reminder?.scheduled_for
-                                        ? formatDateTimeIST(reminder.scheduled_for)
-                                        : apt.payment_check_requested_at
-                                        ? "1 min after tap"
-                                        : "Not scheduled"}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <span style={{ color: "var(--color-charcoal-muted)", display: "block", fontSize: "0.75rem" }}>
-                                      Reminder Delivery Status
-                                    </span>
-                                    <span
-                                      style={{
-                                        display: "inline-block",
-                                        fontSize: "0.75rem",
-                                        fontWeight: 700,
-                                        textTransform: "uppercase",
-                                        padding: "0.1rem 0.45rem",
-                                        borderRadius: "3px",
-                                        background:
-                                          reminder?.delivery_status === "sent"
-                                            ? "#E8F5E9"
-                                            : reminder?.delivery_status === "failed"
-                                            ? "#FFEBEE"
-                                            : reminder?.delivery_status === "processing"
-                                            ? "#E3F2FD"
-                                            : "#FFF8E1",
-                                        color:
-                                          reminder?.delivery_status === "sent"
-                                            ? "#2E7D32"
-                                            : reminder?.delivery_status === "failed"
-                                            ? "#C62828"
-                                            : reminder?.delivery_status === "processing"
-                                            ? "#1565C0"
-                                            : "#E65100",
-                                      }}
-                                    >
-                                      {reminder?.delivery_status || (apt.payment_check_requested_at ? "pending" : "none")}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                <p style={{ margin: "0.35rem 0 0", fontSize: "0.78rem", color: "var(--color-charcoal-soft)" }}>
-                                  {isConfirmed
-                                    ? "Payment verified against bank account. Google Meet link dispatched to patient."
-                                    : "Check your UPI app (dhontash@okicici) or bank statement before confirming. The patient's button tap is a reminder only and does not prove payment."}
-                                </p>
-                              </div>
-
-                              {!isConfirmed && (
-                                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", flexShrink: 0 }}>
-                                  <button
-                                    onClick={() => handleConfirmUpiAppointment(apt.id)}
-                                    disabled={confirmingId === apt.id}
-                                    className="btn btn-primary btn-sm admin-upi-action-btn"
-                                    id={`confirm-btn-${apt.id}`}
-                                  >
-                                    {confirmingId === apt.id
-                                      ? "Verifying & Generating Meet..."
-                                      : isExpiredHold
-                                      ? "⚖️ Reconcile & Confirm Payment"
-                                      : "✓ Mark Verified & Confirm Appointment"}
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })()}
-
                       {/* Teleconsultation & Google Meet Room Section */}
                       {apt.google_meet_link ? (
                         <div
@@ -1401,17 +1313,34 @@ export default function AdminDashboardPage() {
 
                         <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                           {apt.status === "confirmed" && (
-                            <button
-                              onClick={() => handleUpdateStatus(apt.id, "completed")}
-                              className="btn btn-secondary btn-sm"
-                              style={{ gap: "0.375rem", color: "#1B5E20" }}
-                              title="Mark consultation as completed"
-                            >
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                <polyline points="20 6 9 17 4 12"/>
-                              </svg>
-                              Mark Completed
-                            </button>
+                            <>
+                              <button
+                                onClick={() => handleUpdateStatus(apt.id, "completed")}
+                                className="btn btn-secondary btn-sm"
+                                style={{ gap: "0.375rem", color: "#1B5E20" }}
+                                title="Mark consultation as completed"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                Mark Completed
+                              </button>
+
+                              <button
+                                onClick={() => openRescheduleModal(apt)}
+                                className="btn btn-secondary btn-sm"
+                                style={{ gap: "0.375rem", color: "var(--color-maroon)", fontWeight: 600 }}
+                                title="Reschedule this consultation to another date and slot"
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                  <line x1="16" y1="2" x2="16" y2="6" />
+                                  <line x1="8" y1="2" x2="8" y2="6" />
+                                  <line x1="3" y1="10" x2="21" y2="10" />
+                                </svg>
+                                📅 Reschedule
+                              </button>
+                            </>
                           )}
                           <button
                             onClick={() => openNotesModal(apt)}
@@ -1694,6 +1623,171 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
+      {/* ADMIN RESCHEDULE MODAL */}
+      {selectedAppointmentForReschedule && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            backdropFilter: "blur(4px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1rem",
+            zIndex: 50,
+          }}
+          role="dialog"
+          aria-labelledby="reschedule-title"
+        >
+          <div
+            className="card card-padded"
+            style={{
+              width: "100%",
+              maxWidth: "520px",
+              background: "var(--color-cream)",
+              maxHeight: "90vh",
+              overflowY: "auto",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginBottom: "1rem",
+              }}
+            >
+              <div>
+                <h3 id="reschedule-title" style={{ fontFamily: "var(--font-serif)", fontSize: "1.35rem", margin: 0 }}>
+                  Reschedule Consultation
+                </h3>
+                <p style={{ fontSize: "0.8125rem", color: "var(--color-charcoal-soft)", margin: "0.25rem 0 0" }}>
+                  Patient: {selectedAppointmentForReschedule.patients?.name || "Patient"} · Current: {selectedAppointmentForReschedule.appointment_date} ({selectedAppointmentForReschedule.slot_time} IST)
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedAppointmentForReschedule(null)}
+                className="btn btn-ghost btn-sm"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {rescheduleError && (
+              <div
+                style={{
+                  background: "#FFEBEE",
+                  color: "#C62828",
+                  padding: "0.625rem 0.875rem",
+                  borderRadius: "var(--radius-sm)",
+                  fontSize: "0.8125rem",
+                  marginBottom: "1rem",
+                  border: "1px solid #FFCDD2",
+                }}
+              >
+                ⚠️ {rescheduleError}
+              </div>
+            )}
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label
+                  htmlFor="reschedule-date"
+                  style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.375rem" }}
+                >
+                  Select New Date
+                </label>
+                <input
+                  id="reschedule-date"
+                  type="date"
+                  min={todayStr || new Date().toISOString().split("T")[0]}
+                  value={rescheduleDate}
+                  onChange={(e) => setRescheduleDate(e.target.value)}
+                  className="input"
+                  style={{ width: "100%" }}
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="reschedule-slot"
+                  style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.375rem" }}
+                >
+                  Select New Consultation Slot (IST)
+                </label>
+                <select
+                  id="reschedule-slot"
+                  value={rescheduleSlot}
+                  onChange={(e) => setRescheduleSlot(e.target.value)}
+                  className="input"
+                  style={{ width: "100%", background: "#FFFFFF" }}
+                >
+                  <option value="19:00">7:00 PM – 7:20 PM IST</option>
+                  <option value="19:20">7:20 PM – 7:40 PM IST</option>
+                  <option value="19:40">7:40 PM – 8:00 PM IST</option>
+                </select>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="reschedule-reason"
+                  style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, marginBottom: "0.375rem" }}
+                >
+                  Reason / Administrative Note (Optional)
+                </label>
+                <input
+                  id="reschedule-reason"
+                  type="text"
+                  value={rescheduleReason}
+                  onChange={(e) => setRescheduleReason(e.target.value)}
+                  placeholder="e.g. Doctor schedule shift, patient requested timing change"
+                  className="input"
+                  style={{ width: "100%" }}
+                />
+              </div>
+
+              <div
+                style={{
+                  background: "#E8F5E9",
+                  border: "1px solid #A5D6A7",
+                  borderRadius: "var(--radius-sm)",
+                  padding: "0.625rem 0.875rem",
+                  fontSize: "0.78rem",
+                  color: "#2E7D32",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.5rem",
+                }}
+              >
+                <span>ℹ️ An updated confirmation email with the Google Meet link will be automatically dispatched to the patient ({selectedAppointmentForReschedule.patients?.email || "patient"}).</span>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "0.5rem" }}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedAppointmentForReschedule(null)}
+                  className="btn btn-secondary"
+                  disabled={rescheduling}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmAdminReschedule}
+                  className="btn btn-primary"
+                  disabled={rescheduling}
+                >
+                  {rescheduling ? "Rescheduling..." : "Confirm Reschedule"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mobile PWA Bottom Navigation Bar */}
       <nav className="admin-mobile-bottom-nav" aria-label="Doctor Mobile Navigation">
         <button
@@ -1717,23 +1811,6 @@ export default function AdminDashboardPage() {
         <button
           onClick={() => {
             setActiveTab("consultations");
-            setStatusFilter("pending_payment");
-          }}
-          className={cn("admin-mobile-nav-item", activeTab === "consultations" && statusFilter === "pending_payment" && "active")}
-          aria-label="Pending payment verifications"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-          </svg>
-          <span>Verify</span>
-          {pendingCount > 0 && (
-            <span className="admin-mobile-nav-badge urgent">{pendingCount}</span>
-          )}
-        </button>
-
-        <button
-          onClick={() => {
-            setActiveTab("consultations");
             setStatusFilter("all");
           }}
           className={cn("admin-mobile-nav-item", activeTab === "consultations" && statusFilter === "all" && "active")}
@@ -1745,7 +1822,7 @@ export default function AdminDashboardPage() {
             <line x1="8" y1="2" x2="8" y2="6" />
             <line x1="3" y1="10" x2="21" y2="10" />
           </svg>
-          <span>All</span>
+          <span>All ({allActiveCount})</span>
         </button>
 
         <button

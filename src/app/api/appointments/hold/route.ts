@@ -136,8 +136,8 @@ export async function POST(request: NextRequest) {
     const bookingToken = crypto.randomBytes(32).toString("hex");
     const bookingTokenHash = crypto.createHash("sha256").update(bookingToken).digest("hex");
 
-    // 15-minute hold for user to complete payment
-    const holdExpiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    // 5-minute hold for user to complete payment
+    const holdExpiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
     let appointment: any = null;
     let aptError: any = null;
@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
         consultationFee: appointment.consultation_fee,
         isFamilyHeadDiscount: !!isFamilyHeadDiscount,
         holdExpiresAt: appointment.hold_expires_at,
-        message: "Slot held successfully for 15 minutes pending payment.",
+        message: "Slot held successfully for 5 minutes pending payment.",
       },
       { status: 201 }
     );
