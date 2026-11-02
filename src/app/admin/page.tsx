@@ -1095,7 +1095,7 @@ export default function AdminDashboardPage() {
                       style={{
                         display: "flex",
                         flexDirection: "column",
-                        gap: "1rem",
+                        gap: "0.75rem",
                         borderLeft: isConfirmed ? "4px solid #2E7D32" : "4px solid var(--color-saffron)",
                       }}
                     >
@@ -1176,7 +1176,7 @@ export default function AdminDashboardPage() {
                               `Tashi Delek / Hello ${apt.patients.name || ""}, this is Dr. Dhondup Tashi regarding your consultation scheduled for ${apt.appointment_date} at ${apt.slot_time} IST.`
                             );
                             return (
-                              <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+                              <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.35rem", marginBottom: "0.15rem", flexWrap: "wrap", alignItems: "center" }}>
                                 <a
                                   href={`tel:${apt.patients.phone}`}
                                   className="btn btn-secondary btn-sm"
@@ -1249,19 +1249,9 @@ export default function AdminDashboardPage() {
 
                       {/* Teleconsultation & Google Meet Room Section */}
                       {apt.google_meet_link ? (
-                        <div
-                          style={{
-                            background: "#F4FBF7",
-                            border: "1.5px solid #A5D6A7",
-                            borderRadius: "var(--radius-sm)",
-                            padding: "0.875rem 1rem",
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "0.625rem",
-                          }}
-                        >
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <div className="admin-meet-active-box">
+                          <div className="admin-meet-header">
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
                               <span style={{ fontSize: "1.2rem" }}>📹</span>
                               <strong style={{ color: "#1B5E20", fontSize: "0.95rem" }}>
                                 Google Meet Video Consultation
@@ -1281,41 +1271,30 @@ export default function AdminDashboardPage() {
                               </span>
                             </div>
                             <span style={{ fontSize: "0.78rem", color: "#2E7D32", fontWeight: 600 }}>
-                              🗓️ Doctor Account: Dhontash@gmail.com
+                              🗓️ Doctor: Dhontash@gmail.com
                             </span>
                           </div>
 
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "0.5rem",
-                              flexWrap: "wrap",
-                              background: "#FFFFFF",
-                              padding: "0.5rem 0.75rem",
-                              borderRadius: "6px",
-                              border: "1px solid #C8E6C9",
-                            }}
-                          >
-                            <code style={{ fontSize: "0.85rem", color: "#1B5E20", fontWeight: 600, wordBreak: "break-all", flex: 1 }}>
+                          <div className="admin-meet-link-row">
+                            <code style={{ fontSize: "0.82rem", color: "#1B5E20", fontWeight: 600, wordBreak: "break-all", flex: 1, minWidth: 0 }}>
                               {apt.google_meet_link}
                             </code>
                             <button
                               onClick={() => handleCopyMeetLink(apt.id, apt.google_meet_link!)}
                               className="btn btn-secondary btn-sm"
-                              style={{ padding: "0.25rem 0.6rem", fontSize: "0.75rem", gap: "0.25rem" }}
+                              style={{ padding: "0.25rem 0.6rem", fontSize: "0.75rem", gap: "0.25rem", flexShrink: 0 }}
                               title="Copy Google Meet link"
                             >
                               {copiedMeetId === apt.id ? "✓ Copied!" : "📋 Copy"}
                             </button>
                           </div>
 
-                          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+                          <div className="admin-meet-actions">
                             <a
                               href={apt.google_meet_link}
                               target="_blank"
                               rel="noreferrer"
-                              className="btn btn-primary btn-sm"
+                              className="btn btn-primary btn-sm admin-meet-action-btn"
                               style={{ background: "#2E7D32", borderColor: "#2E7D32", gap: "0.375rem" }}
                             >
                               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -1329,7 +1308,7 @@ export default function AdminDashboardPage() {
                               href="https://calendar.google.com/calendar"
                               target="_blank"
                               rel="noreferrer"
-                              className="btn btn-secondary btn-sm"
+                              className="btn btn-secondary btn-sm admin-meet-action-btn"
                               style={{ gap: "0.375rem" }}
                               title="Open Google Calendar"
                             >
@@ -1345,7 +1324,7 @@ export default function AdminDashboardPage() {
                             <button
                               onClick={() => handleSyncCalendar(apt.id)}
                               disabled={syncingCalendarId === apt.id}
-                              className="btn btn-ghost btn-sm"
+                              className="btn btn-ghost btn-sm admin-meet-action-btn"
                               style={{ fontSize: "0.78rem", color: "var(--color-charcoal-soft)", gap: "0.25rem" }}
                               title="Re-send Google Calendar invite to Dhontash@gmail.com"
                             >
@@ -1354,32 +1333,19 @@ export default function AdminDashboardPage() {
                           </div>
                         </div>
                       ) : (
-                        <div
-                          style={{
-                            background: "var(--color-cream-soft)",
-                            border: "1px dashed var(--color-border-soft)",
-                            borderRadius: "var(--radius-sm)",
-                            padding: "0.75rem 1rem",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            flexWrap: "wrap",
-                            gap: "0.5rem",
-                          }}
-                        >
-                          <div>
+                        <div className="admin-meet-pending-box">
+                          <div style={{ minWidth: 0, flex: 1 }}>
                             <span style={{ fontSize: "0.85rem", color: "var(--color-charcoal)", fontWeight: 600, display: "block" }}>
                               📹 Google Meet Consultation Room
                             </span>
-                            <span style={{ fontSize: "0.78rem", color: "var(--color-charcoal-muted)" }}>
+                            <span style={{ fontSize: "0.78rem", color: "var(--color-charcoal-muted)", display: "block", marginTop: "0.15rem" }}>
                               Google Meet room & Calendar invite will be automatically dispatched to Dhontash@gmail.com upon payment verification.
                             </span>
                           </div>
                           <button
                             onClick={() => handleSyncCalendar(apt.id)}
                             disabled={syncingCalendarId === apt.id}
-                            className="btn btn-secondary btn-sm"
-                            style={{ gap: "0.375rem" }}
+                            className="btn btn-secondary btn-sm admin-meet-pending-btn"
                           >
                             {syncingCalendarId === apt.id ? "Setting up..." : "⚡ Set Up Google Meet & Calendar Now"}
                           </button>
