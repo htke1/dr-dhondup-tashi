@@ -302,7 +302,7 @@ function StepDateSelect({
     const istMinute = istNow.getMinutes();
     const pastCutoff = istHour > 18 || (istHour === 18 && istMinute >= 0);
 
-    const generatedDays: { dateStr: string; label: string; subLabel: string; disabled: boolean }[] = [];
+    const generatedDays: { dateStr: string; label: string; subLabel: string; disabled: boolean; isOffDay?: boolean }[] = [];
 
     for (let i = 0; i < 14; i++) {
       const d = new Date(today);
