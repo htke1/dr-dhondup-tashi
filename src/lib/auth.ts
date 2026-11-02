@@ -27,7 +27,7 @@ export function isAllowedAdminEmail(email: string): boolean {
  * Creates a signed session token.
  */
 export function createSessionToken(email: string): string {
-  const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
+  const expiresAt = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days persistent login
   const payload = JSON.stringify({ email, expiresAt });
   const hmac = crypto.createHmac("sha256", DEFAULT_SECRET).update(payload).digest("hex");
   return Buffer.from(JSON.stringify({ payload, hmac })).toString("base64");

@@ -180,7 +180,7 @@ export default function BookingPage() {
                     <div className="stepper-circle" aria-hidden="true">
                       {currentStep > s.step ? (
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-                          <polyline points="20 6 9 17 4 12"/>
+                          <polyline points="20 6 9 17 4 12" />
                         </svg>
                       ) : (
                         s.step
@@ -395,7 +395,7 @@ function StepDateSelect({
         >
           Continue to time selection
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-            <polyline points="9 18 15 12 9 6"/>
+            <polyline points="9 18 15 12 9 6" />
           </svg>
         </button>
       </div>
@@ -474,7 +474,7 @@ function StepSlotSelect({
         aria-label="Go back to date selection"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-          <polyline points="15 18 9 12 15 6"/>
+          <polyline points="15 18 9 12 15 6" />
         </svg>
         Back
       </button>
@@ -545,8 +545,8 @@ function StepSlotSelect({
                       color: !isAvailable
                         ? "var(--color-charcoal-muted)"
                         : isSelected
-                        ? "var(--color-maroon)"
-                        : "var(--color-charcoal)",
+                          ? "var(--color-maroon)"
+                          : "var(--color-charcoal)",
                       fontWeight: 500,
                       marginBottom: "0.125rem",
                     }}
@@ -559,12 +559,12 @@ function StepSlotSelect({
                 </div>
                 {isSelected && (
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-maroon)" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-                    <polyline points="20 6 9 17 4 12"/>
+                    <polyline points="20 6 9 17 4 12" />
                   </svg>
                 )}
                 {!isSelected && isAvailable && (
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-border)" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                    <polyline points="9 18 15 12 9 6"/>
+                    <polyline points="9 18 15 12 9 6" />
                   </svg>
                 )}
               </button>
@@ -582,7 +582,7 @@ function StepSlotSelect({
         >
           Continue to your details
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-            <polyline points="9 18 15 12 9 6"/>
+            <polyline points="9 18 15 12 9 6" />
           </svg>
         </button>
       </div>
@@ -641,7 +641,7 @@ function StepPatientDetails({
         aria-label="Go back to time selection"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-          <polyline points="15 18 9 12 15 6"/>
+          <polyline points="15 18 9 12 15 6" />
         </svg>
         Back
       </button>
@@ -674,7 +674,7 @@ function StepPatientDetails({
             />
             {errors.fullName && (
               <span id="fullName-error" className="form-error" role="alert">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
                 {errors.fullName}
               </span>
             )}
@@ -700,7 +700,7 @@ function StepPatientDetails({
             />
             {errors.mobileNumber && (
               <span id="mobileNumber-error" className="form-error" role="alert">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
                 {errors.mobileNumber}
               </span>
             )}
@@ -729,7 +729,7 @@ function StepPatientDetails({
             </span>
             {errors.emailAddress && (
               <span className="form-error" role="alert">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
                 {errors.emailAddress}
               </span>
             )}
@@ -755,7 +755,7 @@ function StepPatientDetails({
             />
             {errors.age && (
               <span className="form-error" role="alert">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
                 {errors.age}
               </span>
             )}
@@ -836,7 +836,7 @@ function StepPatientDetails({
             </span>
             {errors.reasonForConsultation && (
               <span className="form-error" role="alert">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
                 {errors.reasonForConsultation}
               </span>
             )}
@@ -942,7 +942,7 @@ function StepPatientDetails({
           <button type="submit" className="btn btn-primary" id="step3-next">
             Review appointment
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-              <polyline points="9 18 15 12 9 6"/>
+              <polyline points="9 18 15 12 9 6" />
             </svg>
           </button>
         </div>
@@ -1271,24 +1271,24 @@ function StepReview({
     { label: "Format", value: "Online via Google Meet" },
     ...(patient.isFamilyHeadDiscount
       ? [
-          { label: "Standard fee", value: APP_CONFIG.consultationFeeDisplay },
-          {
-            label: "Family Head Subsidy (50%)",
-            value: (
-              <span style={{ color: "var(--color-maroon)", fontWeight: 600 }}>
-                -{APP_CONFIG.familyHeadSubsidy.feeDisplay} (Dr. Tashi Community Initiative)
-              </span>
-            ),
-          },
-          {
-            label: "Total payable",
-            value: (
-              <span style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--color-maroon)" }}>
-                {APP_CONFIG.familyHeadSubsidy.feeDisplay}
-              </span>
-            ),
-          },
-        ]
+        { label: "Standard fee", value: APP_CONFIG.consultationFeeDisplay },
+        {
+          label: "Family Head Subsidy (50%)",
+          value: (
+            <span style={{ color: "var(--color-maroon)", fontWeight: 600 }}>
+              -{APP_CONFIG.familyHeadSubsidy.feeDisplay} (Dr. Tashi Community Initiative)
+            </span>
+          ),
+        },
+        {
+          label: "Total payable",
+          value: (
+            <span style={{ fontSize: "1.05rem", fontWeight: 700, color: "var(--color-maroon)" }}>
+              {APP_CONFIG.familyHeadSubsidy.feeDisplay}
+            </span>
+          ),
+        },
+      ]
       : [{ label: "Consultation fee", value: APP_CONFIG.consultationFeeDisplay }]),
     { label: "Patient name", value: patient.fullName },
     { label: "Mobile", value: patient.mobileNumber },
@@ -1313,7 +1313,7 @@ function StepReview({
           aria-label="Back to appointment review"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-            <polyline points="15 18 9 12 15 6"/>
+            <polyline points="15 18 9 12 15 6" />
           </svg>
           Back to Details
         </button>
@@ -1495,7 +1495,7 @@ function StepReview({
               </span>
               <span style={{ fontWeight: 600, color: "var(--color-charcoal)", display: "flex", alignItems: "center", gap: "0.3rem", textAlign: "right" }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="#2E7D32" aria-hidden="true" style={{ flexShrink: 0 }}>
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                 </svg>
                 {upiPaymentData.recipientName}
               </span>
@@ -1543,8 +1543,8 @@ function StepReview({
               style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", width: "100%", maxWidth: "420px", justifyContent: "center" }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                <line x1="12" y1="18" x2="12.01" y2="18"/>
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+                <line x1="12" y1="18" x2="12.01" y2="18" />
               </svg>
               Open in UPI App (Mobile Device)
             </a>
@@ -1647,9 +1647,9 @@ function StepReview({
               }}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="15" y1="9" x2="9" y2="15"/>
-                <line x1="9" y1="9" x2="15" y2="15"/>
+                <circle cx="12" cy="12" r="10" />
+                <line x1="15" y1="9" x2="9" y2="15" />
+                <line x1="9" y1="9" x2="15" y2="15" />
               </svg>
               Exit or Cancel Reservation
             </button>
@@ -1662,11 +1662,10 @@ function StepReview({
                 background: paymentCheckNotification.alreadyRequested
                   ? "#FFF8E1"
                   : "#E8F5E9",
-                border: `1.5px solid ${
-                  paymentCheckNotification.alreadyRequested
-                    ? "#FFE082"
-                    : "#A5D6A7"
-                }`,
+                border: `1.5px solid ${paymentCheckNotification.alreadyRequested
+                  ? "#FFE082"
+                  : "#A5D6A7"
+                  }`,
                 borderRadius: "var(--radius-sm)",
                 padding: "0.85rem 1rem",
                 display: "flex",
@@ -1773,9 +1772,9 @@ function StepReview({
                     }}
                   >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <circle cx="12" cy="12" r="10"/>
-                      <line x1="12" y1="8" x2="12" y2="12"/>
-                      <line x1="12" y1="16" x2="12.01" y2="16"/>
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
                     </svg>
                   </div>
                   <h3
@@ -1808,8 +1807,8 @@ function StepReview({
                   }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
                 </button>
               </div>
@@ -1926,7 +1925,7 @@ function StepReview({
           aria-label="Go back to patient details"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-            <polyline points="15 18 9 12 15 6"/>
+            <polyline points="15 18 9 12 15 6" />
           </svg>
           Back
         </button>
@@ -2070,10 +2069,10 @@ function StepReview({
         {submitting
           ? "Generating payment request..."
           : APP_CONFIG.payment.mode === "upi_qr"
-          ? `Proceed to Pay via UPI QR — ${patient.isFamilyHeadDiscount ? APP_CONFIG.familyHeadSubsidy.feeDisplay : APP_CONFIG.consultationFeeDisplay}`
-          : `Proceed to Payment — ${patient.isFamilyHeadDiscount ? APP_CONFIG.familyHeadSubsidy.feeDisplay : APP_CONFIG.consultationFeeDisplay}`}
+            ? `Proceed to Pay via UPI QR — ${patient.isFamilyHeadDiscount ? APP_CONFIG.familyHeadSubsidy.feeDisplay : APP_CONFIG.consultationFeeDisplay}`
+            : `Proceed to Payment — ${patient.isFamilyHeadDiscount ? APP_CONFIG.familyHeadSubsidy.feeDisplay : APP_CONFIG.consultationFeeDisplay}`}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
         </svg>
       </button>
       <p
@@ -2089,8 +2088,8 @@ function StepReview({
         }}
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
         </svg>
         {APP_CONFIG.payment.mode === "upi_qr"
           ? "Official UPI QR Code · Clinic Administrator Verification"
@@ -2174,8 +2173,8 @@ function StepConfirmed({
             }}
           >
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
             </svg>
           </div>
           <div>
@@ -2279,11 +2278,11 @@ function StepConfirmed({
               }}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/>
-                <line x1="16" y1="17" x2="8" y2="17"/>
-                <polyline points="10 9 9 9 8 9"/>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
               </svg>
             </div>
             <div>
@@ -2430,9 +2429,9 @@ function StepConfirmed({
             style={{ gap: "0.375rem" }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <polyline points="6 9 6 2 18 2 18 9"/>
-              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-              <rect x="6" y="14" width="12" height="8"/>
+              <polyline points="6 9 6 2 18 2 18 9" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <rect x="6" y="14" width="12" height="8" />
             </svg>
             Print / Save Receipt
           </button>
@@ -2473,7 +2472,7 @@ function StepConfirmed({
           }}
         >
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <polyline points="20 6 9 17 4 12"/>
+            <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
         <div>
@@ -2565,8 +2564,8 @@ function StepConfirmed({
             }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <polygon points="23 7 16 12 23 17 23 7"/>
-              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+              <polygon points="23 7 16 12 23 17 23 7" />
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
             </svg>
           </div>
           <div>
@@ -2615,8 +2614,8 @@ function StepConfirmed({
             id="join-meet-btn"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <polygon points="23 7 16 12 23 17 23 7"/>
-              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+              <polygon points="23 7 16 12 23 17 23 7" />
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
             </svg>
             Join Google Meet Call
           </a>
@@ -2630,10 +2629,10 @@ function StepConfirmed({
             id="add-gcal-btn"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-              <line x1="16" y1="2" x2="16" y2="6"/>
-              <line x1="8" y1="2" x2="8" y2="6"/>
-              <line x1="3" y1="10" x2="21" y2="10"/>
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
             </svg>
             Add to Google Calendar
           </a>
@@ -2750,9 +2749,9 @@ function StepConfirmed({
           style={{ gap: "0.375rem" }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <polyline points="6 9 6 2 18 2 18 9"/>
-            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-            <rect x="6" y="14" width="12" height="8"/>
+            <polyline points="6 9 6 2 18 2 18 9" />
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+            <rect x="6" y="14" width="12" height="8" />
           </svg>
           Print / Save Receipt
         </button>

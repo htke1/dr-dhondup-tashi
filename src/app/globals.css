@@ -1182,3 +1182,205 @@ p {
   }
 }
 
+/* =========================================================
+   PHYSICIAN PWA WEB APP STYLES
+   ========================================================= */
+.admin-pwa-banner {
+  background: linear-gradient(135deg, #7B2D3E 0%, #541724 100%);
+  color: #FFFFFF;
+  border-radius: var(--radius-md);
+  padding: 0.875rem 1.25rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  box-shadow: 0 4px 16px rgba(123, 45, 62, 0.2);
+  border: 1px solid rgba(196, 127, 58, 0.35);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.admin-pwa-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex: 1;
+}
+
+.admin-pwa-banner-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #F2C981;
+}
+
+.admin-pwa-banner-title {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  margin: 0 0 0.15rem;
+  color: #FFFFFF;
+}
+
+.admin-pwa-banner-subtitle {
+  font-size: 0.8125rem;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.admin-pwa-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.admin-pwa-install-btn {
+  background: #C47F3A;
+  color: #FFFFFF;
+  border: 1px solid #F2C981;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.admin-pwa-install-btn:hover {
+  background: #B36E2A;
+  transform: translateY(-1px);
+}
+
+.admin-pwa-dismiss-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0.35rem;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-pwa-dismiss-btn:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Mobile Quick Bottom Navigation Bar */
+.admin-mobile-bottom-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .admin-mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+    z-index: 40;
+    justify-content: space-around;
+    padding: 0.4rem 0.5rem calc(0.4rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .admin-mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    flex: 1;
+    padding: 0.35rem 0.25rem;
+    color: var(--color-charcoal-muted);
+    font-size: 0.7rem;
+    font-weight: 500;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    position: relative;
+    transition: all 0.15s ease;
+  }
+
+  .admin-mobile-nav-item.active {
+    color: var(--color-maroon);
+    font-weight: 700;
+  }
+
+  .admin-mobile-nav-badge {
+    position: absolute;
+    top: 2px;
+    right: calc(50% - 16px);
+    background: var(--color-maroon);
+    color: #FFFFFF;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.05rem 0.35rem;
+    border-radius: 999px;
+    line-height: 1.2;
+  }
+
+  .admin-mobile-nav-badge.urgent {
+    background: #E65100;
+    animation: urgentPulse 1.8s infinite;
+  }
+
+  .admin-main-mobile-padding {
+    padding-bottom: 5.5rem !important;
+  }
+}
+
+@keyframes urgentPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.85;
+  }
+}
+
+.live-sync-pulse {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2E7D32;
+  box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.7);
+  animation: livePulse 2s infinite;
+}
+
+@keyframes livePulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(46, 125, 50, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(46, 125, 50, 0);
+  }
+}
+

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8E3448" />
+      <stop offset="100%" stop-color="#541724" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F2C981" />
+      <stop offset="100%" stop-color="#C47F3A" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="512" height="512" rx="113" fill="url(#bgGrad)" />
+
+  <!-- Outer Ring -->
+  <circle cx="256" cy="256" r="195" fill="none" stroke="url(#goldGrad)" stroke-width="8" opacity="0.75" />
+  <circle cx="256" cy="256" r="174" fill="none" stroke="url(#goldGrad)" stroke-width="4" stroke-dasharray="9 9" opacity="0.45" />
+
+  <!-- Medical Cross Symbol -->
+  <rect x="220" y="143" width="72" height="225" rx="18" fill="url(#goldGrad)" />
+  <rect x="143" y="220" width="225" height="72" rx="18" fill="url(#goldGrad)" />
+
+  <!-- Center Seal & Doctor Monogram -->
+  <circle cx="256" cy="256" r="56" fill="#541724" stroke="url(#goldGrad)" stroke-width="6" />
+  <text x="256" y="275" font-family="Georgia, serif" font-size="56px" font-weight="bold" fill="#FFFFFF" text-anchor="middle">DT</text>
+</svg>

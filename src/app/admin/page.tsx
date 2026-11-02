@@ -99,10 +99,18 @@ export default function AdminDashboardPage() {
   const [todayStr, setTodayStr] = useState("");
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
 
-  // Fetch appointments
+  // PWA & Mobile Web App State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isIos, setIsIos] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string>("");
+  const [syncingNow, setSyncingNow] = useState(false);
+
+  // Fetch all appointments for instant client-side tab switching
   const loadAppointments = useCallback(async () => {
     try {
-      const res = await fetch(`/api/admin/appointments?status=${statusFilter}`);
+      const res = await fetch(`/api/admin/appointments?status=all`);
       if (res.status === 401) {
         router.push("/admin/login");
         return;
@@ -117,7 +125,7 @@ export default function AdminDashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, router]);
+  }, [router]);
 
   // Fetch schedule overrides
   const loadOverrides = useCallback(async () => {
@@ -136,11 +144,106 @@ export default function AdminDashboardPage() {
     }
   }, [router]);
 
+  // Master refresh function
+  const refreshAll = useCallback(
+    async (silent = false) => {
+      if (!silent) setSyncingNow(true);
+      try {
+        await Promise.all([loadAppointments(), loadOverrides()]);
+        const now = new Date();
+        setLastSyncedAt(
+          now.toLocaleTimeString("en-IN", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          })
+        );
+      } finally {
+        if (!silent) setSyncingNow(false);
+      }
+    },
+    [loadAppointments, loadOverrides]
+  );
+
+  // PWA Service Worker Registration & Installation Prompt Handler
+  useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch((err) => {
+        console.warn("SW registration note:", err);
+      });
+    }
+
+    const isStandaloneMode =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone === true;
+    setIsStandalone(isStandaloneMode);
+
+    const ua = window.navigator.userAgent.toLowerCase();
+    const isAppleDevice = /iphone|ipad|ipod/.test(ua) && !(window as any).MSStream;
+    setIsIos(isAppleDevice);
+
+    const handlePrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      if (!sessionStorage.getItem("pwa_dismissed")) {
+        setShowInstallBanner(true);
+      }
+    };
+
+    window.addEventListener("beforeinstallprompt", handlePrompt);
+
+    if (isAppleDevice && !isStandaloneMode && !sessionStorage.getItem("pwa_dismissed")) {
+      setShowInstallBanner(true);
+    }
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handlePrompt);
+    };
+  }, []);
+
+  // Background Live Sync (every 25 seconds + on window focus)
   useEffect(() => {
     setTodayStr(new Date().toISOString().split("T")[0]);
-    loadAppointments();
-    loadOverrides();
-  }, [loadAppointments, loadOverrides]);
+    refreshAll(false);
+
+    const interval = setInterval(() => {
+      refreshAll(true);
+    }, 25000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        refreshAll(true);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleVisibility);
+    };
+  }, [refreshAll]);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        setShowInstallBanner(false);
+        setDeferredPrompt(null);
+      }
+    } else if (isIos) {
+      alert(
+        "To install on your iPhone / iPad:\n\n1. Tap the Share button at the bottom of Safari (square with arrow ⎋).\n2. Scroll down and tap 'Add to Home Screen' (⊕).\n3. Tap 'Add' in the top-right."
+      );
+    } else {
+      alert(
+        "To install on this device: Open your browser settings menu (⋮ or ⋯) and click 'Install app' or 'Add to Home screen'."
+      );
+    }
+  };
 
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
@@ -348,6 +451,28 @@ export default function AdminDashboardPage() {
 
   const todayCount = appointments.filter((a) => a.appointment_date === todayStr).length;
   const confirmedCount = appointments.filter((a) => a.status === "confirmed").length;
+  const pendingVerificationAppointments = appointments.filter(
+    (a) =>
+      a.status === "pending_payment" ||
+      a.payment_status === "pending" ||
+      Boolean(a.payment_check_requested_at)
+  );
+  const pendingCount = pendingVerificationAppointments.length;
+
+  // Instant in-memory filter
+  const displayedAppointments = appointments.filter((apt) => {
+    if (statusFilter === "today") return apt.appointment_date === todayStr;
+    if (statusFilter === "pending_payment") {
+      return (
+        apt.status === "pending_payment" ||
+        apt.payment_status === "pending" ||
+        Boolean(apt.payment_check_requested_at)
+      );
+    }
+    if (statusFilter === "confirmed") return apt.status === "confirmed";
+    if (statusFilter === "completed") return apt.status === "completed";
+    return true;
+  });
 
   return (
     <div style={{ minHeight: "100dvh", background: "var(--color-ivory)" }}>
@@ -420,6 +545,69 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className="admin-header-actions">
+            {/* Live Sync Status indicator */}
+            <button
+              onClick={() => refreshAll(false)}
+              disabled={syncingNow}
+              className="btn btn-secondary btn-sm"
+              style={{ gap: "0.35rem", fontSize: "0.8rem" }}
+              title="Click to force sync live appointments"
+              id="admin-live-sync-btn"
+            >
+              <span className="live-sync-pulse" aria-hidden="true" />
+              <span>{syncingNow ? "Syncing..." : lastSyncedAt ? `Live (${lastSyncedAt})` : "Live Sync"}</span>
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                style={{
+                  transform: syncingNow ? "rotate(360deg)" : "none",
+                  transition: "transform 0.6s linear",
+                }}
+              >
+                <path d="M23 4v6h-6" />
+                <path d="M1 20v-6h6" />
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+              </svg>
+            </button>
+
+            {/* PWA App Install Action */}
+            {!isStandalone ? (
+              <button
+                onClick={handleInstallClick}
+                className="btn btn-secondary btn-sm"
+                style={{ gap: "0.35rem", color: "var(--color-maroon)", fontWeight: 600, borderColor: "rgba(123,45,62,0.3)" }}
+                title="Install Dr. Tashi Portal as Mobile Web App"
+                id="header-install-pwa-btn"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                  <rect x="5" y="2" width="14" height="20" rx="3" />
+                  <line x1="12" y1="18" x2="12.01" y2="18" />
+                </svg>
+                Install App
+              </button>
+            ) : (
+              <span
+                style={{
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  padding: "0.2rem 0.5rem",
+                  borderRadius: "var(--radius-sm)",
+                  background: "rgba(46,125,50,0.1)",
+                  color: "#2E7D32",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.25rem",
+                }}
+              >
+                📱 App Mode
+              </span>
+            )}
+
             <button
               onClick={handleProcessReminders}
               disabled={processingReminders}
@@ -428,14 +616,14 @@ export default function AdminDashboardPage() {
               title="Process and send any due 1-minute payment reminders"
               id="admin-sync-reminders-btn"
             >
-              {processingReminders ? "Checking Queue..." : "⚡ Sync Payment Reminders"}
+              {processingReminders ? "Checking..." : "⚡ Reminders"}
             </button>
             <Link href="/" target="_blank" className="btn btn-ghost btn-sm" style={{ gap: "0.375rem" }}>
-              View Patient Site
+              Patient Site
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                <polyline points="15 3 21 3 21 9"/>
-                <line x1="10" y1="14" x2="21" y2="3"/>
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                <polyline points="15 3 21 3 21 9" />
+                <line x1="10" y1="14" x2="21" y2="3" />
               </svg>
             </Link>
             <button onClick={handleLogout} className="btn btn-secondary btn-sm" id="admin-logout-btn">
@@ -446,7 +634,101 @@ export default function AdminDashboardPage() {
       </header>
 
       {/* Main Content */}
-      <main className="container" style={{ paddingBlock: "1.5rem" }}>
+      <main className="container admin-main-mobile-padding" style={{ paddingBlock: "1.5rem" }}>
+        {/* PWA Mobile Web App Install Banner */}
+        {showInstallBanner && !isStandalone && (
+          <div className="admin-pwa-banner" role="region" aria-label="Install Physician Web App">
+            <div className="admin-pwa-banner-content">
+              <div className="admin-pwa-banner-icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <rect x="5" y="2" width="14" height="20" rx="3" />
+                  <line x1="12" y1="18" x2="12.01" y2="18" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="admin-pwa-banner-title">
+                  {isIos ? "Add Dr. Tashi Portal to Home Screen" : "Install Dr. Tashi Physician Web App"}
+                </h3>
+                <p className="admin-pwa-banner-subtitle">
+                  {isIos
+                    ? "Install on your iPhone: Tap the Share button (⎋), then select 'Add to Home Screen' for 1-tap clinic access."
+                    : "Install on your phone or computer for 1-tap clinic access, full-screen view, and instant schedule updates."}
+                </p>
+              </div>
+            </div>
+            <div className="admin-pwa-banner-actions">
+              <button
+                onClick={handleInstallClick}
+                className="admin-pwa-install-btn"
+                id="install-pwa-banner-btn"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                {isIos ? "How to Install" : "Install App"}
+              </button>
+              <button
+                onClick={() => {
+                  setShowInstallBanner(false);
+                  sessionStorage.setItem("pwa_dismissed", "true");
+                }}
+                className="admin-pwa-dismiss-btn"
+                title="Dismiss"
+                aria-label="Dismiss install banner"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Urgent Alert when Patients Await Payment Verification */}
+        {pendingCount > 0 && (
+          <div
+            style={{
+              background: "#FFF8E1",
+              border: "1.5px solid #FFB300",
+              borderRadius: "var(--radius-md)",
+              padding: "0.875rem 1.25rem",
+              marginBottom: "1.25rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "1rem",
+              flexWrap: "wrap",
+              boxShadow: "0 2px 8px rgba(255, 179, 0, 0.15)",
+            }}
+            role="alert"
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
+              <span style={{ fontSize: "1.25rem" }}>⚡</span>
+              <div>
+                <strong style={{ color: "#E65100", fontSize: "0.9375rem", display: "block" }}>
+                  {pendingCount} Patient{pendingCount > 1 ? "s" : ""} Awaiting Payment Verification
+                </strong>
+                <span style={{ fontSize: "0.8125rem", color: "#6D4C41" }}>
+                  Patients have tapped &quot;I&apos;ve completed the payment&quot;. Review your UPI app and confirm their booking.
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setActiveTab("consultations");
+                setStatusFilter("pending_payment");
+              }}
+              className="btn btn-sm"
+              style={{ background: "#E65100", color: "#FFFFFF", border: "none", fontWeight: 600 }}
+            >
+              Review Verifications &rarr;
+            </button>
+          </div>
+        )}
+
         {remindersNotice && (
           <div
             style={{
@@ -565,82 +847,104 @@ export default function AdminDashboardPage() {
         {activeTab === "consultations" && (
           <div>
             {/* Filter bar */}
-            <div className="admin-filter-bar">
-              <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", margin: 0 }}>Upcoming Patients</h2>
-              <div className="admin-filter-buttons">
-                {["all", "confirmed", "pending_payment"].map((status) => (
-                  <button
-                    key={status}
-                    onClick={() => setStatusFilter(status)}
-                    className={cn(
-                      "btn btn-sm",
-                      statusFilter === status ? "btn-primary" : "btn-secondary"
-                    )}
-                    style={{ textTransform: "capitalize" }}
-                  >
-                    {status.replace("_", " ")}
-                  </button>
-                ))}
+              <div className="admin-filter-bar">
+                <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.4rem", margin: 0 }}>
+                  {statusFilter === "today"
+                    ? "Today's Consultations"
+                    : statusFilter === "pending_payment"
+                    ? "Payment Verifications"
+                    : "Patient Consultations"}
+                </h2>
+                <div className="admin-filter-buttons">
+                  {[
+                    { id: "today", label: `Today's Clinic (${todayCount})` },
+                    { id: "all", label: `All (${appointments.length})` },
+                    { id: "pending_payment", label: `Verifications (${pendingVerificationAppointments.length})` },
+                    { id: "confirmed", label: `Confirmed (${confirmedCount})` },
+                  ].map((tabItem) => (
+                    <button
+                      key={tabItem.id}
+                      onClick={() => setStatusFilter(tabItem.id)}
+                      className={cn(
+                        "btn btn-sm",
+                        statusFilter === tabItem.id ? "btn-primary" : "btn-secondary"
+                      )}
+                      style={{
+                        position: "relative",
+                        fontWeight: statusFilter === tabItem.id ? 600 : 400,
+                      }}
+                    >
+                      {tabItem.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {loading ? (
-              <div className="card card-padded" style={{ textAlign: "center", color: "var(--color-charcoal-soft)" }}>
-                Loading consultation records...
-              </div>
-            ) : appointments.length === 0 ? (
-              <div
-                className="card card-padded"
-                style={{
-                  textAlign: "center",
-                  padding: "3rem 1.5rem",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  color: "var(--color-charcoal-soft)",
-                }}
-              >
+              {loading ? (
+                <div className="card card-padded" style={{ textAlign: "center", color: "var(--color-charcoal-soft)" }}>
+                  Loading consultation records...
+                </div>
+              ) : displayedAppointments.length === 0 ? (
                 <div
+                  className="card card-padded"
                   style={{
-                    width: "48px",
-                    height: "48px",
-                    borderRadius: "50%",
-                    background: "var(--color-cream-soft)",
+                    textAlign: "center",
+                    padding: "3rem 1.5rem",
                     display: "flex",
+                    flexDirection: "column",
                     alignItems: "center",
-                    justifyContent: "center",
-                    color: "var(--color-maroon)",
-                    marginBottom: "0.25rem",
+                    gap: "0.75rem",
+                    color: "var(--color-charcoal-soft)",
                   }}
                 >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
-                  </svg>
+                  <div
+                    style={{
+                      width: "48px",
+                      height: "48px",
+                      borderRadius: "50%",
+                      background: "var(--color-cream-soft)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--color-maroon)",
+                      marginBottom: "0.25rem",
+                    }}
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                  </div>
+                  <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.2rem", color: "var(--color-charcoal)" }}>
+                    {statusFilter === "today"
+                      ? "No consultations scheduled for today"
+                      : statusFilter === "pending_payment"
+                      ? "No pending payment verifications"
+                      : "No consultations found"}
+                  </h3>
+                  <p style={{ maxWidth: "460px", fontSize: "0.875rem", lineHeight: 1.5, margin: 0 }}>
+                    {statusFilter === "today"
+                      ? "There are currently no patients booked for today's evening clinic slots."
+                      : "Your Supabase database is connected and listening for live bookings. New appointments appear here automatically."}
+                  </p>
+                  <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.75rem", flexWrap: "wrap", justifyContent: "center" }}>
+                    {statusFilter !== "all" && (
+                      <button onClick={() => setStatusFilter("all")} className="btn btn-secondary btn-sm">
+                        View All Appointments
+                      </button>
+                    )}
+                    <Link href="/book" target="_blank" className="btn btn-primary btn-sm">
+                      Open Patient Booking Page
+                    </Link>
+                  </div>
                 </div>
-                <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "1.2rem", color: "var(--color-charcoal)" }}>
-                  No consultations booked yet
-                </h3>
-                <p style={{ maxWidth: "460px", fontSize: "0.875rem", lineHeight: 1.5, margin: 0 }}>
-                  Your Supabase PostgreSQL database is connected and listening for live bookings. Once a patient completes checkout, their record, clinical intake, and Google Meet room will appear here automatically.
-                </p>
-                <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.75rem", flexWrap: "wrap", justifyContent: "center" }}>
-                  <Link href="/book" target="_blank" className="btn btn-primary btn-sm">
-                    Open Patient Booking Page
-                  </Link>
-                  <button onClick={() => setActiveTab("schedule")} className="btn btn-secondary btn-sm">
-                    Test Blocked Dates
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                {appointments.map((apt) => {
-                  const hasNotes = !!apt.consultation_notes?.doctor_notes;
-                  const isConfirmed = apt.status === "confirmed";
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                  {displayedAppointments.map((apt) => {
+                    const hasNotes = !!apt.consultation_notes?.doctor_notes;
+                    const isConfirmed = apt.status === "confirmed";
 
                   return (
                     <div
@@ -702,6 +1006,55 @@ export default function AdminDashboardPage() {
                           <p style={{ fontSize: "0.85rem", color: "var(--color-charcoal-soft)", wordBreak: "break-word", lineHeight: 1.5, margin: 0 }}>
                             Age: {apt.patients?.age} · Phone: {apt.patients?.phone} · Email: {apt.patients?.email}
                           </p>
+
+                          {/* 1-Tap Mobile Patient Quick Actions: Call, WhatsApp, Email */}
+                          {apt.patients?.phone && (() => {
+                            const cleanPhone = apt.patients.phone.replace(/[^0-9]/g, "");
+                            const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+                            const waMsg = encodeURIComponent(
+                              `Tashi Delek / Hello ${apt.patients.name || ""}, this is Dr. Dhondup Tashi regarding your consultation scheduled for ${apt.appointment_date} at ${apt.slot_time} IST.`
+                            );
+                            return (
+                              <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+                                <a
+                                  href={`tel:${apt.patients.phone}`}
+                                  className="btn btn-secondary btn-sm"
+                                  style={{ padding: "0.22rem 0.55rem", fontSize: "0.75rem", gap: "0.3rem" }}
+                                  title="Call patient phone"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                                  </svg>
+                                  Call
+                                </a>
+                                <a
+                                  href={`https://wa.me/${waPhone}?text=${waMsg}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="btn btn-secondary btn-sm"
+                                  style={{ padding: "0.22rem 0.55rem", fontSize: "0.75rem", gap: "0.3rem", color: "#2E7D32", borderColor: "rgba(46,125,50,0.3)" }}
+                                  title="Chat with patient on WhatsApp"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                                  </svg>
+                                  WhatsApp
+                                </a>
+                                <a
+                                  href={`mailto:${apt.patients.email}`}
+                                  className="btn btn-secondary btn-sm"
+                                  style={{ padding: "0.22rem 0.55rem", fontSize: "0.75rem", gap: "0.3rem" }}
+                                  title="Send email to patient"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                    <polyline points="22,6 12,13 2,6" />
+                                  </svg>
+                                  Email
+                                </a>
+                              </div>
+                            );
+                          })()}
                         </div>
 
                         {/* Slot badge */}
@@ -1340,6 +1693,76 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Mobile PWA Bottom Navigation Bar */}
+      <nav className="admin-mobile-bottom-nav" aria-label="Doctor Mobile Navigation">
+        <button
+          onClick={() => {
+            setActiveTab("consultations");
+            setStatusFilter("today");
+          }}
+          className={cn("admin-mobile-nav-item", activeTab === "consultations" && statusFilter === "today" && "active")}
+          aria-label="Today's consultations"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          <span>Today</span>
+          {todayCount > 0 && (
+            <span className="admin-mobile-nav-badge">{todayCount}</span>
+          )}
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab("consultations");
+            setStatusFilter("pending_payment");
+          }}
+          className={cn("admin-mobile-nav-item", activeTab === "consultations" && statusFilter === "pending_payment" && "active")}
+          aria-label="Pending payment verifications"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          </svg>
+          <span>Verify</span>
+          {pendingCount > 0 && (
+            <span className="admin-mobile-nav-badge urgent">{pendingCount}</span>
+          )}
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab("consultations");
+            setStatusFilter("all");
+          }}
+          className={cn("admin-mobile-nav-item", activeTab === "consultations" && statusFilter === "all" && "active")}
+          aria-label="All consultations"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          <span>All</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("schedule")}
+          className={cn("admin-mobile-nav-item", activeTab === "schedule" && "active")}
+          aria-label="Schedule and leaves"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+          <span>Leaves</span>
+          {overrides.length > 0 && (
+            <span className="admin-mobile-nav-badge">{overrides.length}</span>
+          )}
+        </button>
+      </nav>
     </div>
   );
 }

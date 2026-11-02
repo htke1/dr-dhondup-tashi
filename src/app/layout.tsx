@@ -6,6 +6,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#7B2D3E",
 };
 
 export const metadata: Metadata = {
@@ -16,6 +17,15 @@ export const metadata: Metadata = {
   description: `Book an online medical consultation with ${APP_CONFIG.doctor.name}. ${APP_CONFIG.site.tagline} Consultations available daily via Google Meet.`,
   keywords: ["online doctor consultation", "Dr Dhondup Tashi", "Tibetan doctor", "online medical appointment", "teleconsultation India"],
   authors: [{ name: APP_CONFIG.doctor.name }],
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Dr. Tashi Portal",
+  },
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/apple-touch-icon.png",
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",
