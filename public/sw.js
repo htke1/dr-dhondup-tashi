@@ -1,5 +1,5 @@
 // Dr. Dhondup Tashi — Physician Web App Service Worker
-const CACHE_NAME = 'dr-dhondup-portal-v1';
+const CACHE_NAME = 'dr-dhondup-portal-v2';
 
 const STATIC_ASSETS = [
   '/admin',
@@ -42,7 +42,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Stale-while-revalidate for static assets, network-first for pages
+  // Network-first for navigation and pages
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(() => {
@@ -54,25 +54,25 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Network-first with cache fallback for CSS, JS, and static assets so changes appear immediately
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return (
-        response ||
-        fetch(event.request).then((networkResponse) => {
-          if (
-            networkResponse &&
-            networkResponse.status === 200 &&
-            event.request.method === 'GET' &&
-            !event.request.url.includes('chrome-extension')
-          ) {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseClone);
-            });
-          }
-          return networkResponse;
-        })
-      );
-    })
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (
+          networkResponse &&
+          networkResponse.status === 200 &&
+          event.request.method === 'GET' &&
+          !event.request.url.includes('chrome-extension')
+        ) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
 });

@@ -179,7 +179,9 @@ export default function AdminDashboardPage() {
   // PWA Service Worker Registration & Installation Prompt Handler
   useEffect(() => {
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch((err) => {
+      navigator.serviceWorker.register("/sw.js").then((reg) => {
+        reg.update();
+      }).catch((err) => {
         console.warn("SW registration note:", err);
       });
     }
@@ -1099,8 +1101,8 @@ export default function AdminDashboardPage() {
                         borderLeft: isConfirmed ? "4px solid #2E7D32" : "4px solid var(--color-saffron)",
                       }}
                     >
-                      <div className="admin-card-header">
-                        <div className="admin-card-patient-info">
+                      <div className="admin-card-header" style={{ width: "100%", gap: "0.375rem" }}>
+                        <div className="admin-card-patient-info" style={{ width: "100%", flex: "none", margin: 0, padding: 0 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem", flexWrap: "wrap" }}>
                             <h3 style={{ fontSize: "1.15rem", fontWeight: 600, margin: 0 }}>
                               {apt.patients?.name || "Patient Record"}
@@ -1219,7 +1221,7 @@ export default function AdminDashboardPage() {
                         </div>
 
                         {/* Slot badge */}
-                        <div className="admin-card-slot-badge">
+                        <div className="admin-card-slot-badge" style={{ marginTop: 0 }}>
                           <p style={{ fontFamily: "var(--font-serif)", fontSize: "1.05rem", fontWeight: 600, color: "var(--color-maroon)", margin: 0 }}>
                             {apt.appointment_date} · {apt.slot_time} IST
                           </p>
@@ -1333,7 +1335,7 @@ export default function AdminDashboardPage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="admin-meet-pending-box">
+                        <div className="admin-meet-pending-box" style={{ width: "100%", boxSizing: "border-box" }}>
                           <div style={{ minWidth: 0, flex: 1 }}>
                             <span style={{ fontSize: "0.85rem", color: "var(--color-charcoal)", fontWeight: 600, display: "block" }}>
                               📹 Google Meet Consultation Room
@@ -1346,6 +1348,7 @@ export default function AdminDashboardPage() {
                             onClick={() => handleSyncCalendar(apt.id)}
                             disabled={syncingCalendarId === apt.id}
                             className="btn btn-secondary btn-sm admin-meet-pending-btn"
+                            style={{ maxWidth: "100%", whiteSpace: "normal", wordBreak: "break-word", textAlign: "center" }}
                           >
                             {syncingCalendarId === apt.id ? "Setting up..." : "⚡ Set Up Google Meet & Calendar Now"}
                           </button>
