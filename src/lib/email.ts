@@ -1,4 +1,4 @@
-import { Resend } from "resend";
+﻿import { Resend } from "resend";
 import { APP_CONFIG } from "./config";
 
 interface BookingEmailData {
@@ -648,3 +648,163 @@ ${adminUrl}`;
   }
 }
 
+
+
+export interface PrescriptionNoteEmailData {
+  appointmentId: string;
+  patientName: string;
+  patientEmail: string;
+  patientAge?: number | string;
+  patientPhone?: string;
+  appointmentDate: string; // YYYY-MM-DD
+  doctorNotes: string;
+  prescriptionNotes?: string;
+}
+
+export async function sendPrescriptionNoteEmail(data: PrescriptionNoteEmailData) {
+  const resend = getResendClient();
+  const dateStr = formatDisplayDate(data.appointmentDate);
+  const subject = `Clinical Consultation & Prescription Note — ${dateStr}`;
+
+  // Signature hosted on public HTTPS CDN (renders inline without creating an email attachment)
+  const appBaseUrl = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
+  const signatureImgUrl = appBaseUrl && !appBaseUrl.includes("localhost")
+    ? `${appBaseUrl}/images/doctor-signature.jpg`
+    : "https://raw.githubusercontent.com/htke1/dr-dhondup-tashi/main/public/images/doctor-signature.jpg";
+
+  const plainText = `CLINICAL CONSULTATION & PRESCRIPTION NOTE
+Date: ${dateStr}
+
+Patient: ${data.patientName}
+${data.patientAge ? `Age: ${data.patientAge}\n` : ""}${data.patientPhone ? `Phone: ${data.patientPhone}\n` : ""}
+Doctor: ${APP_CONFIG.doctor.name}
+Qualifications: ${APP_CONFIG.doctor.title}
+KMC Registration No.: ${APP_CONFIG.doctor.kmcRegistration || "1,05,969"}
+
+--------------------------------------------------
+CLINICAL DIAGNOSIS & OBSERVATIONS:
+${data.doctorNotes}
+
+${data.prescriptionNotes ? `PRESCRIPTION & MEDICATION PLAN:\n${data.prescriptionNotes}\n` : ""}
+--------------------------------------------------
+Doctor Signature: ${APP_CONFIG.doctor.name}
+KMC Registration No.: ${APP_CONFIG.doctor.kmcRegistration || "1,05,969"}
+`;
+
+  const contentHtml = `
+    <!-- Header with Doctor Details and Date Top Right -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 24px; border-bottom: 2px solid #7B2D3E; padding-bottom: 16px;">
+      <tr>
+        <td style="vertical-align: top;">
+          <h2 style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; color: #7B2D3E; font-weight: 700;">
+            ${APP_CONFIG.doctor.name}
+          </h2>
+          <p style="margin: 3px 0 0; font-size: 13px; color: #555;">
+            ${APP_CONFIG.doctor.title} &middot; Family Physician
+          </p>
+          <p style="margin: 2px 0 0; font-size: 12px; color: #777;">
+            KMC Registration No.: <strong>${APP_CONFIG.doctor.kmcRegistration || "1,05,969"}</strong>
+          </p>
+        </td>
+        <td style="vertical-align: top; text-align: right;">
+          <div style="display: inline-block; background-color: #FAF7F2; border: 1px solid #E6DED6; border-radius: 6px; padding: 6px 14px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: #8C8479; display: block; font-weight: 600;">Date</span>
+            <span style="font-size: 14px; font-weight: 700; color: #7B2D3E;">${dateStr}</span>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Patient Details -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #FAF7F2; border: 1px solid #E6DED6; border-radius: 6px; margin-bottom: 24px;">
+      <tr>
+        <td style="padding: 10px 16px; font-size: 13px; color: #333;">
+          <strong style="color: #6E685F; font-size: 11px; text-transform: uppercase; display: block;">Patient Name</strong>
+          <span style="font-size: 15px; font-weight: 700; color: #2D2A26;">${data.patientName}</span>
+        </td>
+        ${data.patientAge ? `
+        <td style="padding: 10px 16px; font-size: 13px; color: #333; border-left: 1px solid #E6DED6;">
+          <strong style="color: #6E685F; font-size: 11px; text-transform: uppercase; display: block;">Age</strong>
+          <span style="font-size: 14px; font-weight: 600; color: #2D2A26;">${data.patientAge} years</span>
+        </td>` : ""}
+        ${data.patientPhone ? `
+        <td style="padding: 10px 16px; font-size: 13px; color: #333; border-left: 1px solid #E6DED6;">
+          <strong style="color: #6E685F; font-size: 11px; text-transform: uppercase; display: block;">Contact</strong>
+          <span style="font-size: 14px; font-weight: 600; color: #2D2A26;">${data.patientPhone}</span>
+        </td>` : ""}
+      </tr>
+    </table>
+
+    <!-- Clinical Diagnosis / Observations -->
+    <div style="margin-bottom: 24px;">
+      <h3 style="margin: 0 0 10px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: #7B2D3E; font-weight: 700; border-bottom: 1px dashed #E6DED6; padding-bottom: 4px;">
+        Clinical Diagnosis &amp; Observations
+      </h3>
+      <div style="background-color: #FFFFFF; border: 1px solid #E6DED6; border-radius: 6px; padding: 14px 18px; font-size: 14px; line-height: 1.6; color: #2D2A26; white-space: pre-wrap;">
+${data.doctorNotes}
+      </div>
+    </div>
+
+    <!-- Prescriptions / Medication Plan -->
+    ${data.prescriptionNotes ? `
+    <div style="margin-bottom: 28px;">
+      <h3 style="margin: 0 0 10px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: #7B2D3E; font-weight: 700; border-bottom: 1px dashed #E6DED6; padding-bottom: 4px;">
+        Prescriptions &amp; Medication Plan
+      </h3>
+      <div style="background-color: #FFFFFF; border: 1px solid #E6DED6; border-radius: 6px; padding: 14px 18px; font-size: 14px; line-height: 1.6; color: #2D2A26; white-space: pre-wrap;">
+${data.prescriptionNotes}
+      </div>
+    </div>
+    ` : ""}
+
+    <!-- Bottom Signature and Registration Area -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top: 32px; border-top: 1.5px solid #E6DED6; padding-top: 16px;">
+      <tr>
+        <td style="vertical-align: bottom;">
+          <p style="margin: 0 0 4px; font-size: 11px; color: #8C8479; text-transform: uppercase; letter-spacing: 0.05em;">
+            Prescribed via Teleconsultation
+          </p>
+          <p style="margin: 0; font-size: 12px; color: #555;">
+            This is a clinically authenticated electronic prescription.
+          </p>
+        </td>
+        <td style="vertical-align: bottom; text-align: right; width: 220px;">
+          <div style="display: inline-block; text-align: left;">
+            <p style="margin: 0 0 4px; font-size: 14px; font-weight: 700; color: #2D2A26;">
+              ${APP_CONFIG.doctor.name}
+            </p>
+            <p style="margin: 0 0 6px; font-size: 12px; color: #4A4640;">
+              KMC Registration No.: <strong>${APP_CONFIG.doctor.kmcRegistration || "1,05,969"}</strong>
+            </p>
+            <div style="margin-top: 6px; display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 12px; font-style: italic; color: #6E685F;">Electronic signature:</span>
+              <img src="${signatureImgUrl}" alt="Dr. Dhondup Tashi Signature" width="120" style="max-height: 52px; width: auto; max-width: 130px; display: inline-block; vertical-align: middle; border: 0;" />
+            </div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  `;
+
+  const html = wrapEmailTemplate(contentHtml);
+
+  if (!resend) {
+    console.log(`[Email Mock] Prescription note sent to ${data.patientEmail} for appointment ${data.appointmentId}`);
+    return { success: true, isMock: true, subject, plainText };
+  }
+
+  try {
+    const res = await resend.emails.send({
+      from: getFromAddress(),
+      to: [data.patientEmail],
+      subject,
+      text: plainText,
+      html,
+    });
+    return { success: true, id: res.data?.id };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.error("[Email Error] Failed to send prescription note email:", errorMsg);
+    return { success: false, error: errorMsg };
+  }
+}

@@ -91,7 +91,9 @@ export default function AdminDashboardPage() {
   const [doctorNotesInput, setDoctorNotesInput] = useState("");
   const [prescriptionInput, setPrescriptionInput] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
+  const [sendingNotes, setSendingNotes] = useState(false);
   const [notesSuccessNotice, setNotesSuccessNotice] = useState(false);
+  const [notesSentNotice, setNotesSentNotice] = useState<string | null>(null);
 
   // Admin Reschedule Modal State
   const [selectedAppointmentForReschedule, setSelectedAppointmentForReschedule] = useState<AppointmentRecord | null>(null);
@@ -305,6 +307,69 @@ export default function AdminDashboardPage() {
       console.error("Failed to save notes:", err);
     } finally {
       setSavingNotes(false);
+    }
+  };
+
+  const handleSendNotesToPatient = async () => {
+    if (!selectedAppointmentForNotes) return;
+    if (!doctorNotesInput?.trim()) {
+      alert("Please write clinical diagnosis/observations before sending.");
+      return;
+    }
+
+    setSendingNotes(true);
+    setNotesSentNotice(null);
+    try {
+      // 1. Save notes first
+      await fetch(`/api/admin/appointments/${selectedAppointmentForNotes.id}/notes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          doctorNotes: doctorNotesInput,
+          prescriptionNotes: prescriptionInput,
+        }),
+      });
+
+      // 2. Dispatch email with styled note and digital signature
+      const res = await fetch(`/api/admin/appointments/${selectedAppointmentForNotes.id}/send-notes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          doctorNotes: doctorNotesInput,
+          prescriptionNotes: prescriptionInput,
+          patientEmail: selectedAppointmentForNotes.patients?.email,
+          patientName: selectedAppointmentForNotes.patients?.name,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setNotesSentNotice(data.message || "Prescription note sent to patient successfully!");
+        setAppointments((prev) =>
+          prev.map((apt) =>
+            apt.id === selectedAppointmentForNotes.id
+              ? {
+                  ...apt,
+                  consultation_notes: {
+                    doctor_notes: doctorNotesInput,
+                    prescription_notes: prescriptionInput,
+                    updated_at: new Date().toISOString(),
+                  },
+                }
+              : apt
+          )
+        );
+        setTimeout(() => {
+          setSelectedAppointmentForNotes(null);
+        }, 1800);
+      } else {
+        alert(data.error || "Failed to send prescription note.");
+      }
+    } catch (err) {
+      console.error("Error sending notes:", err);
+      alert("Network error sending prescription note.");
+    } finally {
+      setSendingNotes(false);
     }
   };
 
@@ -1623,21 +1688,54 @@ export default function AdminDashboardPage() {
                 />
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "0.5rem" }}>
+              {notesSentNotice && (
+                <div
+                  style={{
+                    background: "rgba(16, 185, 129, 0.1)",
+                    border: "1px solid #10B981",
+                    color: "#065F46",
+                    padding: "0.75rem 1rem",
+                    borderRadius: "var(--radius-sm)",
+                    fontSize: "0.8125rem",
+                    marginTop: "0.5rem",
+                  }}
+                >
+                  ✓ {notesSentNotice}
+                </div>
+              )}
+
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", marginTop: "0.5rem", flexWrap: "wrap" }}>
                 <button
                   onClick={() => setSelectedAppointmentForNotes(null)}
                   className="btn btn-secondary"
-                  disabled={savingNotes}
+                  disabled={savingNotes || sendingNotes}
                 >
                   Cancel
                 </button>
-                <button
-                  onClick={handleSaveNotes}
-                  className="btn btn-primary"
-                  disabled={savingNotes}
-                >
-                  {savingNotes ? "Saving..." : "Save Clinical Notes"}
-                </button>
+
+                <div style={{ display: "flex", gap: "0.75rem" }}>
+                  <button
+                    onClick={handleSaveNotes}
+                    className="btn btn-secondary"
+                    disabled={savingNotes || sendingNotes}
+                    title="Save notes internally without sending email"
+                  >
+                    {savingNotes ? "Saving..." : "Save Only"}
+                  </button>
+                  <button
+                    onClick={handleSendNotesToPatient}
+                    className="btn btn-primary"
+                    disabled={savingNotes || sendingNotes}
+                    style={{ display: "inline-flex", alignItems: "center", gap: "0.45rem", background: "var(--color-maroon)" }}
+                    title="Save notes and send formatted prescription note with signature to patient"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <line x1="22" y1="2" x2="11" y2="13" />
+                      <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                    <span>{sendingNotes ? "Sending..." : "Send to Patient"}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

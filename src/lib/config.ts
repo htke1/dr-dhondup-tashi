@@ -12,6 +12,8 @@ export const APP_CONFIG = {
     heroName: "Dr. Dhun Tashi",
     shortName: "Dr. Dhun Tashi",
     title: "MBBS, M.Med (Family Medicine)",
+    kmcRegistration: "1,05,969",
+    signatureUrl: "/images/doctor-signature.jpg",
     role: "Family Physician | Clinical Sonologist | Chief Medical Officer | Community Health Advocate",
     experience: "Years of Clinical Practice",
     hospital: "Gaden Jangtse Hospital, Mundgod, Karnataka, India",

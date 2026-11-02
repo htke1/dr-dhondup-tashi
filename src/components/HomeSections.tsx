@@ -483,7 +483,7 @@ export function ConsultForSection() {
             <div className="divider-ornament-inner" />
           </div>
           <p style={{ maxWidth: "680px", margin: "0 auto", color: "var(--color-charcoal-soft)", fontSize: "1rem" }}>
-            Dr. Dhondup Tashi provides evidence-based clinical consultations, medical second opinions, chronic care planning, and diagnostic report reviews for patients across India and worldwide.
+            Dr. Dhondup Tashi provides evidence-based clinical consultations, medical second opinions, chronic care planning, and diagnostic report reviews for Tibetan, Ladakhi, Lahaul-Spiti and Monpa communities.
           </p>
         </div>
 
