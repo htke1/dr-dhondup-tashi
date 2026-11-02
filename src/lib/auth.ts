@@ -4,15 +4,20 @@ import { cookies } from "next/headers";
 const SESSION_COOKIE_NAME = "drdhondup_admin_session";
 const DEFAULT_SECRET = process.env.ADMIN_AUTH_SECRET || "dr-dhondup-secure-admin-secret-key-2026";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "drdhondup.tashi@gmail.com";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "tashi2026"; // Default dev password
+
+// Cryptographic Salt & PBKDF2 SHA-512 Hash for Production Admin Password
+const ADMIN_PASSWORD_SALT = process.env.ADMIN_PASSWORD_SALT || "drdhondup_clinic_2026_salt";
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH || "dc1c64f0720ce8171ab9c7a63d52ec0032d361afb2ebe02f2191b7e28c42a18ea14cafa29d14fa69e2375beef15e7cd5cba19265d6852fa3de44c03028574dd2";
 
 /**
- * Checks if the provided email matches any authorized administrative or physician email.
+ * Checks if the provided identifier matches authorized physician/admin usernames or emails.
  */
-export function isAllowedAdminEmail(email: string): boolean {
-  if (!email) return false;
-  const normalized = email.trim().toLowerCase();
+export function isAllowedAdminIdentifier(identifier: string): boolean {
+  if (!identifier) return false;
+  const normalized = identifier.trim().toLowerCase();
   const allowed = [
+    "doctortashi",
+    "doctortashi@drdhondup.com",
     ADMIN_EMAIL.toLowerCase(),
     (process.env.DOCTOR_EMAIL || "dhontash@gmail.com").toLowerCase(),
     (process.env.DOCTOR_NOTIFICATION_EMAIL || "dhontash@gmail.com").toLowerCase(),
@@ -21,6 +26,22 @@ export function isAllowedAdminEmail(email: string): boolean {
     "sheraptenzin98@gmail.com",
   ];
   return allowed.includes(normalized);
+}
+
+// Backward-compatible alias
+export const isAllowedAdminEmail = isAllowedAdminIdentifier;
+
+/**
+ * Validates password against salted PBKDF2 hash using timing-safe comparison.
+ */
+export function verifyAdminPassword(password: string): boolean {
+  if (!password) return false;
+  try {
+    const computedHash = crypto.pbkdf2Sync(password, ADMIN_PASSWORD_SALT, 100000, 64, "sha512").toString("hex");
+    return crypto.timingSafeEqual(Buffer.from(computedHash, "hex"), Buffer.from(ADMIN_PASSWORD_HASH, "hex"));
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -68,4 +89,4 @@ export async function isAuthenticatedAdmin(): Promise<boolean> {
   return valid;
 }
 
-export { SESSION_COOKIE_NAME, ADMIN_EMAIL, ADMIN_PASSWORD };
+export { SESSION_COOKIE_NAME, ADMIN_EMAIL };

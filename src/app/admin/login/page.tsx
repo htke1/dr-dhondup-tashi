@@ -7,8 +7,8 @@ import { APP_CONFIG } from "@/lib/config";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("drdhondup.tashi@gmail.com");
-  const [password, setPassword] = useState("tashi2026");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,7 +21,7 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await res.json();
@@ -103,25 +103,6 @@ export default function AdminLoginPage() {
             Access your consultation schedule, patient intake records, and private clinical notes.
           </p>
 
-          {/* Dev credentials hint */}
-          <div
-            style={{
-              background: "var(--color-saffron-pale)",
-              border: "1px solid rgba(196,127,58,0.25)",
-              borderRadius: "var(--radius-md)",
-              padding: "0.75rem 1rem",
-              marginBottom: "1.25rem",
-              fontSize: "0.8125rem",
-              color: "var(--color-charcoal)",
-            }}
-          >
-            <strong>Default dev credentials:</strong>
-            <div style={{ marginTop: "0.25rem", fontFamily: "monospace", fontSize: "0.75rem" }}>
-              Email: drdhondup.tashi@gmail.com<br />
-              Password: tashi2026
-            </div>
-          </div>
-
           {error && (
             <div
               style={{
@@ -142,7 +123,7 @@ export default function AdminLoginPage() {
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div>
               <label
-                htmlFor="admin-email"
+                htmlFor="admin-username"
                 style={{
                   display: "block",
                   fontSize: "0.8125rem",
@@ -151,13 +132,15 @@ export default function AdminLoginPage() {
                   marginBottom: "0.375rem",
                 }}
               >
-                Email Address
+                Username or Email
               </label>
               <input
-                id="admin-email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="admin-username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter username or email"
+                autoComplete="username"
                 required
                 className="input"
                 style={{ width: "100%" }}
@@ -182,6 +165,8 @@ export default function AdminLoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
+                autoComplete="current-password"
                 required
                 className="input"
                 style={{ width: "100%" }}

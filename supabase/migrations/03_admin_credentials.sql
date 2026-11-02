@@ -1,0 +1,12 @@
+-- =============================================================================
+-- DR. DHONDUP TASHI - ONLINE MEDICAL CONSULTATIONS
+-- DATABASE SCHEMA MIGRATION: 03_admin_credentials.sql
+-- Documents production administrator credentials configuration
+-- =============================================================================
+
+-- Administrator credentials are encrypted and stored in Supabase Auth (auth.users).
+-- Username: doctortashi
+-- Login Email: doctortashi@drdhondup.com
+-- Roles: admin / physician
+-- Password: Encrypted using bcrypt in auth.users
+-- Fallback authentication: Salted PBKDF2 (SHA-512, 100,000 iterations) in src/lib/auth.ts
