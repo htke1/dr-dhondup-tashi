@@ -1518,7 +1518,7 @@ function StepReview({
             label: "Community Coupon (100% Off)",
             value: (
               <span style={{ color: "#065F46", fontWeight: 600 }}>
-                -{APP_CONFIG.consultationFeeDisplay} (FREECONSULTATIONFORPOOR)
+                -{APP_CONFIG.consultationFeeDisplay} (100% Free Community Voucher)
               </span>
             ),
           },
@@ -2601,7 +2601,7 @@ function StepReview({
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
           <input
             type="text"
-            placeholder="Enter coupon code (e.g. FREECONSULTATIONFORPOOR)"
+            placeholder="Enter coupon code"
             value={couponInput}
             onChange={(e) => {
               setCouponInput(e.target.value);
@@ -2656,7 +2656,7 @@ function StepReview({
         </div>
         {appliedCoupon && (
           <div style={{ marginTop: "0.5rem", fontSize: "0.8rem", color: "#065F46", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.35rem" }}>
-            <span>✓</span> Coupon <strong>FREECONSULTATIONFORPOOR</strong> applied: 100% Free Community Consultation (₹0).
+            <span>✓</span> Coupon applied: 100% Free Community Consultation (₹0).
           </div>
         )}
         {couponError && (
