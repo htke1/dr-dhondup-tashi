@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Central application configuration.
  * All business-critical settings live here so they are never scattered
  * across components.  Database-backed settings will supersede these
@@ -75,7 +75,7 @@ export const APP_CONFIG = {
   site: {
     name: "Dr. Dhondup Tashi | Online Medical Consultations",
     tagline: "Dedicated online consultation for Tibetan, Ladakhi, Lahaul-Spiti and Monpa communities.",
-    url: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+    url: process.env.NEXT_PUBLIC_APP_URL ?? "https://drdhondupconsultation.in",
   },
 
   /** Timezone used for ALL scheduling decisions */
@@ -160,7 +160,7 @@ export const APP_CONFIG = {
 
   /** Contact information placeholders — replace before production */
   contact: {
-    email: "contact@placeholder.example",
+    email: "contact@drdhondupconsultation.in",
     phone: "+91 XXXXX XXXXX",
   },
 } as const;

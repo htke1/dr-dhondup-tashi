@@ -56,7 +56,7 @@ function getResendClient(): Resend | null {
 function getFromAddress(): string {
   return (
     process.env.EMAIL_FROM ||
-    `"${APP_CONFIG.doctor.name}" <onboarding@resend.dev>`
+    `"${APP_CONFIG.doctor.name}" <appointments@drdhondupconsultation.in>`
   );
 }
 
