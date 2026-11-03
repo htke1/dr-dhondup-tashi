@@ -11,7 +11,7 @@ export const APP_CONFIG = {
     name: "Dr. Dhondup Tashi",
     heroName: "Dr. Dhun Tashi",
     shortName: "Dr. Dhun Tashi",
-    title: "MBBS, M.Med (Family Medicine)",
+    title: "",
     kmcRegistration: "1,05,969",
     signatureUrl: "/images/doctor-signature.jpg",
     role: "Family Physician | Clinical Sonologist | Chief Medical Officer | Community Health Advocate",

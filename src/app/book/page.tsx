@@ -3031,7 +3031,7 @@ function StepConfirmed({
               {APP_CONFIG.doctor.name}
             </dd>
             <dd style={{ fontSize: "0.8125rem", color: "var(--color-charcoal-soft)", margin: "0.125rem 0 0" }}>
-              {APP_CONFIG.doctor.title}
+              KMC Registration No.: {APP_CONFIG.doctor.kmcRegistration || "1,05,969"}
             </dd>
           </div>
 
@@ -3349,7 +3349,7 @@ function StepConfirmed({
             {APP_CONFIG.doctor.name}
           </dd>
           <dd style={{ fontSize: "0.8125rem", color: "var(--color-charcoal-soft)", margin: "0.125rem 0 0" }}>
-            {APP_CONFIG.doctor.title}
+            KMC Registration No.: {APP_CONFIG.doctor.kmcRegistration || "1,05,969"}
           </dd>
         </div>
 

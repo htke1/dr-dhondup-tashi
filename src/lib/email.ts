@@ -110,7 +110,7 @@ function wrapEmailTemplate(contentHtml: string): string {
                       ${APP_CONFIG.doctor.name}
                     </h1>
                     <p style="margin: 4px 0 0; font-size: 13px; color: #6E685F;">
-                      Online Medical Consultations
+                      KMC Registration No.: <strong>${APP_CONFIG.doctor.kmcRegistration || "1,05,969"}</strong>
                     </p>
                   </td>
                 </tr>

@@ -103,7 +103,7 @@ export async function createGoogleCalendarEvent(
 
     const description = [
       `ONLINE MEDICAL CONSULTATION`,
-      `Physician: ${APP_CONFIG.doctor.name} (${APP_CONFIG.doctor.title})`,
+      `Physician: ${APP_CONFIG.doctor.name} (KMC Reg. No.: ${APP_CONFIG.doctor.kmcRegistration || "1,05,969"})`,
       `Hospital: ${APP_CONFIG.doctor.hospital}`,
       `----------------------------------------`,
       `Patient Name: ${params.patientName}`,
