@@ -451,10 +451,10 @@ export default function StandardCheckoutPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setAmountInRupees(650)}
+                      onClick={() => setAmountInRupees(480)}
                       className="btn btn-secondary btn-sm"
                     >
-                      ₹650 (Standard)
+                      ₹480 (Standard)
                     </button>
                   </div>
                   <span style={{ fontSize: "0.75rem", color: "var(--color-charcoal-muted)", marginTop: "0.25rem", display: "block" }}>

@@ -82,10 +82,10 @@ export const APP_CONFIG = {
   timezone: "Asia/Kolkata" as const,
 
   /** Consultation fee in INR */
-  consultationFee: 650,
-  consultationFeeINR: 650,
+  consultationFee: 480,
+  consultationFeeINR: 480,
   /** Human-readable fee string */
-  consultationFeeDisplay: "₹650",
+  consultationFeeDisplay: "₹480",
 
   /** Payment Gateway & UPI Configuration */
   payment: {

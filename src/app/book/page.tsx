@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useCallback, useEffect, useRef, Fragment } from "react";
 import Link from "next/link";
@@ -1288,10 +1288,11 @@ function StepReview({
     }
   };
 
-  const handleProceedToPayment = async () => {
+  const handleProceedToPayment = async (overrideCoupon?: string) => {
     setSubmitting(true);
     setErrorMsg(null);
     try {
+      const activeCoupon = overrideCoupon || appliedCoupon || undefined;
       // 1. Hold slot
       const holdRes = await fetch("/api/appointments/hold", {
         method: "POST",
@@ -1306,6 +1307,7 @@ function StepReview({
           appointmentDate: slot.date,
           slotTime: slot.slotId,
           isFamilyHeadDiscount: !!patient.isFamilyHeadDiscount,
+          couponCode: activeCoupon,
         }),
       });
 
@@ -2623,6 +2625,7 @@ function StepReview({
           {appliedCoupon ? (
             <button
               type="button"
+              disabled={submitting}
               onClick={() => {
                 setAppliedCoupon(null);
                 setCouponInput("");
@@ -2636,11 +2639,13 @@ function StepReview({
           ) : (
             <button
               type="button"
-              onClick={() => {
+              disabled={submitting}
+              onClick={async () => {
                 const code = couponInput.trim().toUpperCase();
                 if (code === "ARVINDREDDYCHARITY") {
                   setAppliedCoupon(code);
                   setCouponError(null);
+                  await handleProceedToPayment(code);
                 } else if (!code) {
                   setCouponError("Please enter a voucher code");
                 } else {
@@ -2650,7 +2655,7 @@ function StepReview({
               className="btn btn-secondary btn-sm"
               style={{ padding: "0.5rem 1rem", fontSize: "0.8rem", fontWeight: 700 }}
             >
-              Apply
+              {submitting ? "Booking..." : "Apply & Confirm"}
             </button>
           )}
         </div>
@@ -2702,7 +2707,7 @@ function StepReview({
           background: isEffectiveFree ? "#059669" : undefined,
           borderColor: isEffectiveFree ? "#047857" : undefined,
         }}
-        onClick={handleProceedToPayment}
+        onClick={() => handleProceedToPayment()}
         disabled={submitting}
         id="pay-btn"
       >
