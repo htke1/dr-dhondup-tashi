@@ -635,7 +635,7 @@ function StepPatientDetails({
     const newErrors: typeof errors = {};
     if (!data.fullName.trim() || data.fullName.trim().length < 2)
       newErrors.fullName = "Please enter your full name (at least 2 characters).";
-    if (!/^\+?[0-9\s\-]{7,15}$/.test(data.mobileNumber.replace(/\s/g, "")))
+    if (data.mobileNumber.trim() && !/^\+?[0-9\s\-]{7,15}$/.test(data.mobileNumber.replace(/\s/g, "")))
       newErrors.mobileNumber = "Please enter a valid mobile number.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.emailAddress))
       newErrors.emailAddress = "Please enter a valid email address.";
@@ -702,8 +702,8 @@ function StepPatientDetails({
 
           {/* Mobile number */}
           <div className="form-group">
-            <label htmlFor="mobileNumber" className="form-label form-label-required">
-              Mobile number
+            <label htmlFor="mobileNumber" className="form-label">
+              Mobile number <span style={{ fontSize: "0.8rem", color: "var(--color-charcoal-muted)", fontWeight: "normal" }}>(Optional)</span>
             </label>
             <input
               id="mobileNumber"
@@ -711,11 +711,11 @@ function StepPatientDetails({
               autoComplete="tel"
               inputMode="tel"
               className={cn("form-input", errors.mobileNumber && "form-input-error")}
-              placeholder="+91 98765 43210"
+              placeholder="+91 98765 43210 (Optional)"
               value={data.mobileNumber}
               onChange={(e) => update("mobileNumber", e.target.value)}
               maxLength={20}
-              aria-required="true"
+              aria-required="false"
               aria-describedby={errors.mobileNumber ? "mobileNumber-error" : undefined}
             />
             {errors.mobileNumber && (
@@ -1573,7 +1573,7 @@ function StepReview({
         ]
         : [{ label: "Consultation fee", value: APP_CONFIG.consultationFeeDisplay }]),
     { label: "Patient name", value: patient.fullName },
-    { label: "Mobile", value: patient.mobileNumber },
+    ...(patient.mobileNumber ? [{ label: "Mobile", value: patient.mobileNumber }] : []),
     { label: "Email", value: patient.emailAddress },
     { label: "Age", value: patient.age },
     ...(patient.preferredLanguage
@@ -3016,7 +3016,7 @@ function StepConfirmed({
               {patient.fullName} (Age: {patient.age})
             </dd>
             <dd style={{ fontSize: "0.8125rem", color: "var(--color-charcoal-soft)", margin: "0.125rem 0 0" }}>
-              {patient.emailAddress} · {patient.mobileNumber}
+              {patient.emailAddress}{patient.mobileNumber ? ` · ${patient.mobileNumber}` : ""}
             </dd>
           </div>
 
@@ -3334,7 +3334,7 @@ function StepConfirmed({
             {patient.fullName} (Age: {patient.age})
           </dd>
           <dd style={{ fontSize: "0.8125rem", color: "var(--color-charcoal-soft)", margin: "0.125rem 0 0" }}>
-            {patient.emailAddress} · {patient.mobileNumber}
+            {patient.emailAddress}{patient.mobileNumber ? ` · ${patient.mobileNumber}` : ""}
           </dd>
         </div>
 

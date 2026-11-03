@@ -5,7 +5,7 @@ interface BookingEmailData {
   appointmentId: string;
   patientName: string;
   patientEmail: string;
-  patientPhone: string;
+  patientPhone?: string;
   patientAge?: number | string;
   preferredLanguage?: string;
   reason?: string;
@@ -279,7 +279,7 @@ export async function sendDoctorNotificationEmail(data: BookingEmailData) {
       <tr>
         <td style="padding: 14px 18px; border-bottom: 1px solid #E6DED6; font-size: 13px;">
           <strong style="color: #6E685F; display: block; font-size: 11px; text-transform: uppercase;">Contact</strong>
-          <span>${data.patientEmail} · ${data.patientPhone}</span>
+          <span>${data.patientEmail}${data.patientPhone ? ` · ${data.patientPhone}` : ""}</span>
         </td>
       </tr>
       ${

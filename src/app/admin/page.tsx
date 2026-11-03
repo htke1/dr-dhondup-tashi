@@ -1167,7 +1167,7 @@ export default function AdminDashboardPage() {
                             )}
                           </div>
                           <p style={{ fontSize: "0.85rem", color: "var(--color-charcoal-soft)", wordBreak: "break-word", lineHeight: 1.5, margin: 0 }}>
-                            Age: {apt.patients?.age} · Phone: {apt.patients?.phone} · Email: {apt.patients?.email}
+                            Age: {apt.patients?.age}{apt.patients?.phone ? ` · Phone: ${apt.patients.phone}` : ""} · Email: {apt.patients?.email}
                           </p>
 
                           {/* 1-Tap Mobile Patient Quick Actions: Call, WhatsApp, Email */}

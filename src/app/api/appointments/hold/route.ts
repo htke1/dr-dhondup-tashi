@@ -131,9 +131,13 @@ export async function POST(request: NextRequest) {
     let patientId: string | null = null;
     if (eligibility.matchedPatientIds.length > 0) {
       patientId = eligibility.matchedPatientIds[0];
+      const updateData: { email: string; age: number; phone?: string } = { email, age };
+      if (phone && phone.trim()) {
+        updateData.phone = phone.trim();
+      }
       await supabase
         .from("patients")
-        .update({ phone, email, age })
+        .update(updateData)
         .eq("id", patientId);
     } else {
       const { data: newPatient, error: patientError } = await supabase
@@ -141,7 +145,7 @@ export async function POST(request: NextRequest) {
         .insert({
           name,
           email,
-          phone,
+          phone: phone?.trim() || "",
           age,
         })
         .select("id")

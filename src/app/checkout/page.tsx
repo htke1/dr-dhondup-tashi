@@ -498,7 +498,7 @@ export default function StandardCheckoutPage() {
                         marginBottom: "0.375rem",
                       }}
                     >
-                      Mobile Contact
+                      Mobile Contact <span style={{ fontWeight: 400, color: "var(--color-charcoal-muted)" }}>(Optional)</span>
                     </label>
                     <input
                       id="customer-phone"
@@ -507,7 +507,6 @@ export default function StandardCheckoutPage() {
                       onChange={(e) => setCustomerPhone(e.target.value)}
                       className="input"
                       style={{ width: "100%" }}
-                      required
                     />
                   </div>
                 </div>

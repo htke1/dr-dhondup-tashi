@@ -5,7 +5,7 @@ interface CalendarEventParams {
   appointmentId: string;
   patientName: string;
   patientEmail: string;
-  patientPhone: string;
+  patientPhone?: string;
   patientAge?: number | string;
   language?: string;
   reason?: string;
@@ -108,7 +108,7 @@ export async function createGoogleCalendarEvent(
       `----------------------------------------`,
       `Patient Name: ${params.patientName}`,
       `Email: ${params.patientEmail}`,
-      `Phone: ${params.patientPhone}`,
+      params.patientPhone ? `Phone: ${params.patientPhone}` : "",
       params.patientAge ? `Age: ${params.patientAge}` : "",
       params.language ? `Preferred Language: ${params.language}` : "",
       params.reason ? `Chief Complaint: ${params.reason}` : "",

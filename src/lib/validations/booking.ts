@@ -13,7 +13,11 @@ export const patientFormSchema = z.object({
   phone: z
     .string()
     .trim()
-    .regex(/^[0-9+()\- ]{8,20}$/, "Please enter a valid phone number (8-20 digits)"),
+    .optional()
+    .refine((val) => !val || /^[0-9+()\- ]{8,20}$/.test(val), {
+      message: "Please enter a valid phone number (8-20 digits)",
+    })
+    .default(""),
   age: z
     .number()
     .int("Age must be a whole number")
