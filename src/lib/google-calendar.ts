@@ -136,20 +136,10 @@ export async function createGoogleCalendarEvent(
       });
     }
 
-    if (
-      process.env.ADMIN_NOTIFICATION_EMAIL &&
-      process.env.ADMIN_NOTIFICATION_EMAIL.toLowerCase() !== doctorEmail.toLowerCase()
-    ) {
-      attendees.push({
-        email: process.env.ADMIN_NOTIFICATION_EMAIL,
-        displayName: "Consultation Admin",
-      });
-    }
-
     const res = await calendar.events.insert({
       calendarId,
       conferenceDataVersion: 1,
-      sendUpdates: "all", // Dispatches calendar invite directly to dhontash@gmail.com and adds to their Google Calendar
+      sendUpdates: "none", // Silent: disables Google's duplicate raw blue email so patient receives only our official clinic email
       requestBody: {
         summary: `Online Consultation: ${params.patientName} — Dr. Dhondup Tashi`,
         description,
@@ -218,7 +208,7 @@ export async function deleteGoogleCalendarEvent(eventId: string): Promise<boolea
     await calendar.events.delete({
       calendarId,
       eventId,
-      sendUpdates: "all",
+      sendUpdates: "none",
     });
     return true;
   } catch (err) {
@@ -247,7 +237,7 @@ export async function updateGoogleCalendarEventTime(
     await calendar.events.patch({
       calendarId,
       eventId,
-      sendUpdates: "all",
+      sendUpdates: "none",
       requestBody: {
         start: {
           dateTime: startDateTime,

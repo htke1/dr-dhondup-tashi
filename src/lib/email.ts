@@ -250,7 +250,6 @@ export async function sendDoctorNotificationEmail(data: BookingEmailData) {
   const doctorEmail =
     process.env.DOCTOR_NOTIFICATION_EMAIL ||
     process.env.DOCTOR_EMAIL ||
-    process.env.ADMIN_NOTIFICATION_EMAIL ||
     "dhontash@gmail.com";
   const dateStr = formatDisplayDate(data.appointmentDate);
   const timeStr = formatSlotDisplay(data.slotTime);
@@ -523,7 +522,6 @@ export async function sendPaymentVerificationReminderEmail(
   const resend = getResendClient();
   const doctorEmail =
     process.env.DOCTOR_NOTIFICATION_EMAIL ||
-    process.env.ADMIN_NOTIFICATION_EMAIL ||
     "drdhondup.tashi@gmail.com";
 
   const dateStr = formatDisplayDate(data.appointmentDate);
