@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       couponCode,
     } = parseResult.data;
 
-    const isCouponFree = couponCode?.trim().toUpperCase() === "FREECONSULTATIONFORPOOR";
+    const isCouponFree = couponCode?.trim().toUpperCase() === "ARVINDREDDYCHARITY";
 
     // 2. Server-side check for First Free Consultation
     const eligibility = await checkFirstConsultationEligibility(name, phone, email);
@@ -223,7 +223,7 @@ export async function POST(request: NextRequest) {
         console.error("Google Calendar creation warning for free consultation:", calErr);
       }
 
-      const couponTag = isCouponFree ? "[Coupon: FREECONSULTATIONFORPOOR (100% Free)] " : "";
+      const couponTag = isCouponFree ? "[Arvind Reddy Charity - 100% Sponsored] " : "";
       const reasonTag = isFamilyHeadDiscount
         ? `[Family Head / Father Initiative] ${couponTag}${reason || ""}`.trim()
         : `${couponTag}${isFirstFree && !isCouponFree ? "[1st Free Consultation] " : ""}${reason || ""}`.trim();

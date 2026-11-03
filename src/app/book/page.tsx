@@ -1126,7 +1126,7 @@ function StepReview({
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [couponError, setCouponError] = useState<string | null>(null);
 
-  const isEffectiveFree = isFirstFreeEligible || appliedCoupon === "FREECONSULTATIONFORPOOR";
+  const isEffectiveFree = isFirstFreeEligible || appliedCoupon === "ARVINDREDDYCHARITY";
 
   useEffect(() => {
     let isCancelled = false;
@@ -1511,14 +1511,14 @@ function StepReview({
     { label: "Time", value: `${slot.slotLabel} IST` },
     { label: "Duration", value: `${APP_CONFIG.appointmentDurationMinutes} minutes` },
     { label: "Format", value: "Online via Google Meet" },
-    ...(appliedCoupon === "FREECONSULTATIONFORPOOR"
+    ...(appliedCoupon === "ARVINDREDDYCHARITY"
       ? [
           { label: "Standard fee", value: APP_CONFIG.consultationFeeDisplay },
           {
-            label: "Community Coupon (100% Off)",
+            label: "Arvind Reddy Charity (100% Off)",
             value: (
               <span style={{ color: "#065F46", fontWeight: 600 }}>
-                -{APP_CONFIG.consultationFeeDisplay} (100% Free Community Voucher)
+                -{APP_CONFIG.consultationFeeDisplay} (Fully Sponsored by Arvind Reddy Charity)
               </span>
             ),
           },
@@ -2596,12 +2596,12 @@ function StepReview({
         }}
       >
         <div style={{ fontSize: "0.825rem", fontWeight: 600, color: "var(--color-charcoal)", marginBottom: "0.5rem" }}>
-          Have a promotional or community coupon code?
+          Arvind Reddy Charity Care Voucher
         </div>
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
           <input
             type="text"
-            placeholder="Enter coupon code"
+            placeholder="Enter voucher code"
             value={couponInput}
             onChange={(e) => {
               setCouponInput(e.target.value);
@@ -2638,13 +2638,13 @@ function StepReview({
               type="button"
               onClick={() => {
                 const code = couponInput.trim().toUpperCase();
-                if (code === "FREECONSULTATIONFORPOOR") {
+                if (code === "ARVINDREDDYCHARITY") {
                   setAppliedCoupon(code);
                   setCouponError(null);
                 } else if (!code) {
-                  setCouponError("Please enter a coupon code");
+                  setCouponError("Please enter a voucher code");
                 } else {
-                  setCouponError("Invalid or expired coupon code");
+                  setCouponError("Invalid or expired voucher code");
                 }
               }}
               className="btn btn-secondary btn-sm"
@@ -2656,7 +2656,7 @@ function StepReview({
         </div>
         {appliedCoupon && (
           <div style={{ marginTop: "0.5rem", fontSize: "0.8rem", color: "#065F46", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.35rem" }}>
-            <span>✓</span> Coupon applied: 100% Free Community Consultation (₹0).
+            <span>✓</span> Voucher applied: Arvind Reddy Charity — 100% Sponsored Consultation (₹0).
           </div>
         )}
         {couponError && (
